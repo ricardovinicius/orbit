@@ -1,3 +1,14 @@
+## Design Workflow
+
+The base prototyping process follows as:
+
+```mermaid
+flowchart LR
+    A["Textual Description"] --> B["Code Prototype without logic (with mocks)"]
+    B --> C["Figma Code to Canvas"]
+    C --> D["Canvas to Code on the main app"]
+```
+
 ## Figma Integration
 
 Whenever requested to implement a screen that is prototyped on Figma, or to prototype an idea, you must use the Figma skills and MCP integration.
