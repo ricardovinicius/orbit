@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { initialData, emptyData, TODAY, type Dataset, type Session } from "@/lib/mock-data";
+import { ThemeToggle } from "./theme-toggle";
 import { Editor, type EditorRequest } from "./editor";
 
 export type ActiveSession = Omit<Session, "end" | "id" | "source">;
@@ -80,7 +81,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             </div>
           </aside>
           <div className="app-body">
-            <header className="topbar"><div className="breadcrumb">My workspace<span>/</span><strong>{title}</strong></div><div className="topbar-right"><button className="prototype-tag" onClick={() => setReview(true)}><span />Prototype</button><span className="topbar-date">Thursday, October 1</span></div></header>
+            <header className="topbar"><div className="breadcrumb">My workspace<span>/</span><strong>{title}</strong></div><div className="topbar-right"><ThemeToggle /><button className="prototype-tag" onClick={() => setReview(true)}><span />Prototype</button><span className="topbar-date">Thursday, October 1</span></div></header>
             {active && <div className="active-banner" role="status"><div><span className="live-dot" /><strong>{activeProject?.name}</strong><span>Session in progress</span><span className="timer-readout">00:25:00</span><small>Demo timer</small></div><Button size="sm" onClick={() => open({ kind: "stop", projectId: active.projectId })}><Square size={12} fill="currentColor" />Stop & review</Button></div>}
             <main id="main-content" className="main-content">
               {state === "loading" ? <div className="loading-state" role="status" aria-label="Loading workspace"><div className="skeleton heading-skeleton" /><div className="metrics-grid">{[0, 1, 2].map((i) => <div key={i} className="skeleton metric-skeleton" />)}</div><div className="skeleton content-skeleton" /><Button variant="outline" onClick={() => fixture("populated")}>Finish loading preview</Button></div> : state === "error" ? <div className="empty-state error-state"><CircleHelp /><h1>We couldn’t load your workspace</h1><p>Your work hasn’t changed. Try loading it again.</p><Button onClick={() => fixture("populated")}>Try again</Button></div> : children}
