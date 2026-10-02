@@ -139,7 +139,11 @@ The MVP should allow the user to:
 ### Sessions
 - manually start and stop a Session;
 - manually register a completed Session;
-- associate Sessions with a Project and optional Tasks.
+- associate Sessions with a Project and optional Tasks;
+- review Session history across Projects, grouped by day;
+- filter Sessions by Project and date range;
+- edit and delete recorded Sessions;
+- see total recorded duration for the selected filters.
 
 ### Progress
 - compare planned time with actual time;
@@ -186,6 +190,21 @@ Shows:
 - planned time;
 - actual time;
 - recent Sessions.
+
+### Sessions
+
+A dedicated history and management view for reviewing and correcting recorded time across Projects.
+
+Shows:
+
+- Session history grouped by day;
+- each Session's Project, optional Tasks, start and end times, and duration;
+- filters by Project and date range;
+- total recorded duration for Sessions matching the selected filters.
+
+Allows users to manually register completed Sessions and edit or delete recorded Sessions.
+
+Charts and planned-versus-actual comparisons belong in Progress.
 
 ### Progress
 
