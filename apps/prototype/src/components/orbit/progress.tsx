@@ -1,0 +1,40 @@
+"use client";
+
+import { useState } from "react";
+import { CalendarDays, CheckCheck, Clock3, Flag } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { TODAY, WEEK_START, addDays, dateLabel, duration, inRange, timeLabel } from "@/lib/mock-data";
+import { useWorkspace } from "./workspace";
+import { CheckpointList, EmptyState, Metric, PageHeading, ProjectTag, SectionHeading, SessionList, TaskList } from "./shared";
+
+export function ProgressScreen() {
+  const { data } = useWorkspace();
+  const [period, setPeriod] = useState("week");
+  const [project, setProject] = useState("all");
+  const [activityDay, setActivityDay] = useState<string | null>(null);
+  const start = period === "week" ? WEEK_START : addDays(TODAY, period === "month" ? -29 : -89);
+  const end = period === "week" ? addDays(WEEK_START, 6) : TODAY;
+  const matches = (id: string) => project === "all" || project === id;
+  const sessions = data.sessions.filter((s) => matches(s.projectId) && inRange(s.date, start, end));
+  const boxes = data.timeboxes.filter((b) => matches(b.projectId) && inRange(b.date, start, end));
+  const tasks = data.tasks.filter((t) => matches(t.projectId) && t.done && t.completedDate && inRange(t.completedDate, start, end));
+  const planned = boxes.reduce((n, b) => n + duration(b), 0);
+  const actual = sessions.reduce((n, s) => n + duration(s), 0);
+  const rows = data.projects.filter((p) => matches(p.id)).map((p) => ({ ...p, planned: boxes.filter((b) => b.projectId === p.id).reduce((n, b) => n + duration(b), 0), actual: sessions.filter((s) => s.projectId === p.id).reduce((n, s) => n + duration(s), 0) }));
+  const max = Math.max(60, ...rows.flatMap((p) => [p.planned, p.actual]));
+  const days = Array.from({ length: 98 }, (_, i) => addDays("2026-06-29", i));
+  const history = data.sessions.filter((s) => matches(s.projectId) && inRange(s.date, days[0], TODAY));
+  const activity = new Map<string, number>();
+  history.forEach((s) => activity.set(s.date, (activity.get(s.date) ?? 0) + duration(s)));
+  const daySessions = activityDay ? history.filter((s) => s.date === activityDay) : [];
+  return <>
+    <PageHeading eyebrow="PROGRESS, AT YOUR OWN PACE" title="See where your time goes." description="Reflect on the work you did, and the things you’re moving toward."><select aria-label="Progress date range" className="compact-select" value={period} onChange={(e) => setPeriod(e.target.value)}><option value="week">This week</option><option value="month">Last 30 days</option><option value="quarter">Last 90 days</option></select><select aria-label="Filter progress by Project" className="compact-select" value={project} onChange={(e) => setProject(e.target.value)}><option value="all">All Projects</option>{data.projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></PageHeading>
+    <p className="range-label">{dateLabel(start)} – {dateLabel(end)}, 2026 <span>·</span> {project === "all" ? "Across all Projects" : data.projects.find((p) => p.id === project)?.name}</p>
+    <div className="metrics-grid"><Metric label="Planned time" value={timeLabel(planned)} note={`${boxes.length} planned Timeboxes`} icon={<CalendarDays size={18} />} /><Metric label="Actual time" value={timeLabel(actual)} note={actual === planned ? "Actual time matches your plan" : planned === 0 ? "Time invested without a plan" : `${timeLabel(Math.abs(actual - planned))} ${actual > planned ? "more" : "less"} than planned`} icon={<Clock3 size={18} />} accent /><Metric label="Tasks completed" value={tasks.length} note="Small steps. Meaningful progress." icon={<CheckCheck size={18} />} /></div>
+    <div className="progress-charts"><Card className="panel comparison-panel"><SectionHeading title="Intention meets reality" /><p className="section-subtitle">Planned and actual time, side by side.</p><div className="chart-legend"><span><i className="planned-swatch" />Planned</span><span><i className="actual-swatch" />Actual</span></div>{rows.length ? <div className="comparison-chart">{rows.map((p) => <div key={p.id} className="comparison-row"><ProjectTag id={p.id} /><div className="comparison-bars"><div><div className="comparison-track"><span className="planned-bar" style={{ width: `${p.planned / max * 100}%` }} /></div><span>{timeLabel(p.planned)}<span className="sr-only"> planned</span></span></div><div><div className="comparison-track"><span className="actual-bar" style={{ width: `${p.actual / max * 100}%` }} /></div><span>{timeLabel(p.actual)}<span className="sr-only"> actual</span></span></div></div></div>)}</div> : <EmptyState compact title="Perspective comes with practice" description="Your Projects and recorded time will appear here." />}<p className="chart-footnote">Plans are intentions. Sessions are the time you actually invested.</p></Card>
+    <Card className="panel distribution-panel"><SectionHeading title="Where your attention went" /><p className="section-subtitle">Your actual time, by Project.</p><div className="distribution-total">{timeLabel(actual)}<small>of actual effort</small></div><div className="distribution-track" aria-hidden="true">{rows.filter((p) => p.actual > 0).map((p) => <span key={p.id} className={p.color} style={{ width: `${p.actual / actual * 100}%` }} />)}</div><div className="distribution-list">{rows.map((p) => <div key={p.id}><ProjectTag id={p.id} /><strong>{timeLabel(p.actual)}</strong><span>{actual ? Math.round(p.actual / actual * 100) : 0}%</span></div>)}</div>{actual === 0 && <p className="gentle-note">No activity recorded for this selection yet.</p>}</Card></div>
+    <Card className="panel heatmap-panel"><SectionHeading title="A little effort adds up"><span className="muted text-xs">Jun 29 – Oct 1, 2026</span></SectionHeading><p className="section-subtitle">Actual activity over the last 14 calendar weeks. Select a day to explore it.</p><div className="heatmap-layout"><div className="heatmap-days"><span>Mon</span><span>Wed</span><span>Fri</span><span>Sun</span></div><div className="heatmap-main"><div className="heatmap-months"><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span></div><div className="heatmap-grid">{days.map((date) => { const amount = activity.get(date) ?? 0; const level = amount === 0 ? 0 : amount < 60 ? 1 : amount < 120 ? 2 : amount < 180 ? 3 : 4; return <button key={date} disabled={date > TODAY} className={`heat-cell level-${level} ${activityDay === date ? "selected" : ""}`} aria-pressed={activityDay === date} aria-label={`${dateLabel(date)}: ${timeLabel(amount)} actual activity`} title={`${dateLabel(date)} · ${timeLabel(amount)} actual`} onClick={() => setActivityDay(date)} />; })}</div></div></div><div className="heatmap-footer"><span>{activity.size} days with recorded activity<span className="meta-divider">·</span>{project === "all" ? "All Projects" : data.projects.find((p) => p.id === project)?.name}</span><div><span>Less</span>{[0, 1, 2, 3, 4].map((i) => <span key={i} className={`heat-cell level-${i}`} />)}<span>More</span></div></div><p className="field-hint heatmap-scale">0 · under 1h · 1–2h · 2–3h · 3h or more. Project filter applies; the history window stays fixed.</p>{activityDay && <div className="day-activity"><SectionHeading title={`Activity on ${dateLabel(activityDay)}`}><Button variant="ghost" size="sm" onClick={() => setActivityDay(null)}>Close</Button></SectionHeading><SessionList sessions={daySessions} /></div>}</Card>
+    <div className="progress-bottom"><Card className="panel"><SectionHeading title="Work that moved forward" count={tasks.length} /><TaskList tasks={tasks} emptyText="No completed Tasks in this period" /></Card><Card className="panel"><SectionHeading title="What’s ahead"><Flag size={15} className="muted" /></SectionHeading><p className="section-subtitle">Upcoming deadlines from today, across future dates.</p><CheckpointList checkpoints={data.checkpoints.filter((c) => matches(c.projectId) && c.date >= TODAY).slice(0, 4)} /></Card></div>
+  </>;
+}

@@ -131,6 +131,7 @@ The MVP should allow the user to:
 
 ### Weekly Planning
 - view a weekly calendar;
+- see Checkpoints on their deadline days, separately from reserved time;
 - distribute Tasks across days;
 - create and edit Timeboxes;
 - support recurring Timeboxes.
@@ -167,6 +168,7 @@ The main planning interface.
 Shows:
 
 - weekly schedule;
+- Checkpoint deadlines, shown on their calendar days without reserving time;
 - Tasks;
 - Timeboxes;
 - recurring commitments.
