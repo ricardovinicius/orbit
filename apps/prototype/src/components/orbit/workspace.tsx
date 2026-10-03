@@ -3,7 +3,7 @@
 import { createContext, useContext, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, FlaskConical, FolderClosed, Orbit, Play, Plus, SlidersHorizontal, Square, Sun, X } from "lucide-react";
+import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, Clock3, FlaskConical, FolderClosed, Orbit, Play, Plus, SlidersHorizontal, Square, Sun, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +31,7 @@ const navigation = [
   { href: "/", label: "Today", icon: Sun },
   { href: "/week", label: "Week", icon: CalendarDays },
   { href: "/projects", label: "Projects", icon: FolderClosed },
+  { href: "/sessions", label: "Sessions", icon: Clock3 },
   { href: "/progress", label: "Progress", icon: BarChart3 },
 ];
 
@@ -64,7 +65,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         <div className="app-shell">
           <aside className="sidebar">
             <Link href="/" className="brand" aria-label="Orbit home"><Orbit size={29} strokeWidth={1.5} /><span>orbit<span className="brand-period">.</span></span></Link>
-            <div className="workspace-label"><span className="workspace-avatar">R</span><div>My workspace<small>A little more intentional.</small></div></div>
+            <div className="sidebar-note"><p>Make time for<br /><strong>what matters.</strong></p></div>
             <div className="nav-label">WORKSPACE</div>
             <nav aria-label="Main navigation">
               {navigation.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={`nav-item ${pathname === href || (href === "/projects" && pathname.startsWith("/projects/")) ? "selected" : ""}`} aria-current={pathname === href || (href === "/projects" && pathname.startsWith("/projects/")) ? "page" : undefined}><Icon size={18} strokeWidth={1.7} /><span>{label}</span>{label === "Today" && <span className="nav-count">{data.tasks.filter((t) => t.date === TODAY && !t.done).length}</span>}</Link>)}
@@ -75,14 +76,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
               {data.projects.length === 0 && <p className="sidebar-empty">Your focus areas will live here.</p>}
             </nav>
             <div className="sidebar-bottom">
-              <div className="sidebar-note"><Orbit size={23} strokeWidth={1.3} /><p>Make time for<br /><strong>what matters.</strong></p></div>
               <button className="review-button" onClick={() => setReview(true)}><SlidersHorizontal size={16} />Prototype controls<ArrowUpRight size={13} /></button>
               <div className="profile"><span className="profile-avatar">R</span><div>Personal workspace<small>Just you. Your own pace.</small></div></div>
             </div>
           </aside>
           <div className="app-body">
             <header className="topbar"><div className="breadcrumb">My workspace<span>/</span><strong>{title}</strong></div><div className="topbar-right"><ThemeToggle /><button className="prototype-tag" onClick={() => setReview(true)}><span />Prototype</button><span className="topbar-date">Thursday, October 1</span></div></header>
-            {active && <div className="active-banner" role="status"><div><span className="live-dot" /><strong>{activeProject?.name}</strong><span>Session in progress</span><span className="timer-readout">00:25:00</span><small>Demo timer</small></div><Button size="sm" onClick={() => open({ kind: "stop", projectId: active.projectId })}><Square size={12} fill="currentColor" />Stop & review</Button></div>}
+            {active && (pathname !== "/" || state === "loading" || state === "error") && <div className="active-banner" role="status"><div><span className="live-dot" /><strong>{activeProject?.name}</strong><span>Session in progress</span><span className="timer-readout">00:25:00</span><small>Demo timer</small></div><Button size="sm" onClick={() => open({ kind: "stop", projectId: active.projectId })}><Square size={12} fill="currentColor" />Stop & review</Button></div>}
             <main id="main-content" className="main-content">
               {state === "loading" ? <div className="loading-state" role="status" aria-label="Loading workspace"><div className="skeleton heading-skeleton" /><div className="metrics-grid">{[0, 1, 2].map((i) => <div key={i} className="skeleton metric-skeleton" />)}</div><div className="skeleton content-skeleton" /><Button variant="outline" onClick={() => fixture("populated")}>Finish loading preview</Button></div> : state === "error" ? <div className="empty-state error-state"><CircleHelp /><h1>We couldn’t load your workspace</h1><p>Your work hasn’t changed. Try loading it again.</p><Button onClick={() => fixture("populated")}>Try again</Button></div> : children}
               <footer className="page-footer"><span><Orbit size={13} /> A little intention goes a long way.</span><span>October 2026</span></footer>

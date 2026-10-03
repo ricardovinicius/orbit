@@ -34,6 +34,7 @@ If a restricted environment prevents Turbopack's CSS worker from binding a local
 | `/week` | Weekly planner, Checkpoint deadlines, day assignments, Timebox forms, and Project filters |
 | `/projects` | Active/archived Projects, search, creation, and editing |
 | `/projects/research` | Project details, Checkpoints, grouped Tasks, time summaries, and Sessions |
+| `/sessions` | Daily Session history, Project/date filters, recorded totals, logging, editing, and confirmed deletion |
 | `/progress` | Planned vs. actual time, Project distribution, completed Tasks, and activity heatmap |
 
 All Projects have their own detail route. Navigation preserves temporary changes until a reload.
@@ -45,6 +46,7 @@ Suggested walkthrough:
 3. Open a Timebox and start a Session. Stop and review the prepared actual-time interval before saving.
 4. Register a historical Session, or complete a Task independently of time recording.
 5. Open Progress and filter by Project or period. Select a heatmap day to inspect its Sessions.
+6. Open Sessions. Filter by Project, choose a period or custom dates, and edit a recorded interval. Confirm the new total in Progress. Delete a Session after reviewing the confirmation, or cancel to keep it. Clear filters to browse older activity.
 
 Use **Prototype controls** in the sidebar or the **Prototype** badge in the header to load populated, active-Session, first-use empty, loading, and load-failure scenarios. Switching scenarios resets temporary edits.
 
@@ -55,6 +57,8 @@ Use **Prototype controls** in the sidebar or the **Prototype** badge in the head
 - The Session timer is a prepared 25-minute state, not a running clock. Start uses 15:00 on the demo date; the stop form lets reviewers adjust that interval.
 - Recurrence controls preview daily, weekday, and weekly commitments. Editing a series updates existing fixture occurrences; the prototype does not generate future occurrences. Moving a date only moves that occurrence.
 - Session entries use a single date and require an end time after the start time. Work across midnight can be demonstrated as separate entries.
+- Sessions opens on the demo week. Filters include archived Projects, all history, and inclusive custom date ranges. Totals include all matching Sessions, even when older days are not yet expanded. Active Sessions are excluded until saved.
+- Editing preserves a Session's recording source and updates shared actual-time totals. Deleting a Session leaves Tasks and Timeboxes unchanged.
 - Progress totals honor the selected period. The heatmap has its own clearly labeled 14-week history window and honors the Project filter.
 - Data resets on refresh. There are no external integrations or requests to save personal activity.
 - The Figma reference informed the shadcn foundation. These screens implement the personal-planning PRD; they have not yet been transferred to the Figma canvas.

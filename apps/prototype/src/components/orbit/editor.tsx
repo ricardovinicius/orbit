@@ -21,7 +21,7 @@ export function Editor({ request, close }: { request: EditorRequest; close: () =
   const task = kind === "task" ? data.tasks.find((t) => t.id === id) : undefined;
   const checkpoint = kind === "checkpoint" ? data.checkpoints.find((c) => c.id === id) : undefined;
   const box = kind === "timebox" ? data.timeboxes.find((b) => b.id === id) : undefined;
-  const session = kind === "session-detail" ? data.sessions.find((s) => s.id === id) : undefined;
+  const session = kind === "session-detail" || kind === "session" ? data.sessions.find((s) => s.id === id) : undefined;
   const existing = task ?? checkpoint ?? box ?? session;
   const [projectId, setProjectId] = useState(existing?.projectId ?? request.projectId ?? (kind === "stop" ? active?.projectId : undefined) ?? data.projects.find((p) => !p.archived)?.id ?? "");
   const [title, setTitle] = useState(project?.name ?? task?.title ?? checkpoint?.title ?? box?.title ?? "");
@@ -42,7 +42,7 @@ export function Editor({ request, close }: { request: EditorRequest; close: () =
   const hasTimes = ["timebox", "session", "stop"].includes(kind);
   const hasTasks = ["timebox", "session", "start", "stop"].includes(kind);
   const repeats = kind === "task" || kind === "timebox";
-  const labels = { project: project ? "Edit Project" : "A new area of focus", checkpoint: checkpoint ? "Edit Checkpoint" : "Set a Checkpoint", task: task ? "Task details" : "Add a Task", timebox: box ? "Timebox details" : "Make time for what matters", start: "Start a Session", stop: "A little progress, recorded", session: "Register a Session", "session-detail": "Session details" };
+  const labels = { project: project ? "Edit Project" : "A new area of focus", checkpoint: checkpoint ? "Edit Checkpoint" : "Set a Checkpoint", task: task ? "Task details" : "Add a Task", timebox: box ? "Timebox details" : "Make time for what matters", start: "Start a Session", stop: "A little progress, recorded", session: session ? "Edit Session" : "Register a Session", "session-detail": "Session details" };
   const icons = { project: FolderClosed, checkpoint: Flag, task: Check, timebox: CalendarDays, start: Play, stop: Clock3, session: Clock3, "session-detail": Clock3 };
   const Icon = icons[kind];
   const overlap = kind === "timebox" && data.timeboxes.some((b) => b.id !== id && b.date === date && minutes(start) < minutes(b.end) && minutes(end) > minutes(b.start));
@@ -72,14 +72,14 @@ export function Editor({ request, close }: { request: EditorRequest; close: () =
       return { ...d, timeboxes: box ? d.timeboxes.map((b) => b.id === id ? next : scope === "series" && box.seriesId && b.seriesId === box.seriesId ? { ...b, projectId, title: next.title, start, end, taskIds, recurrence } : b) : [...d.timeboxes, next] };
     });
     if (kind === "session" || kind === "stop") {
-      setData((d) => ({ ...d, sessions: [...d.sessions, { id: nextId, projectId, date, start, end, taskIds, source: kind === "stop" ? "Timer" : "Manual" }] }));
+      setData((d) => ({ ...d, sessions: session ? d.sessions.map((item) => item.id === id ? { ...item, projectId, date, start, end, taskIds } : item) : [...d.sessions, { id: nextId, projectId, date, start, end, taskIds, source: kind === "stop" ? "Timer" : "Manual" }] }));
       if (kind === "stop") setActive(null);
     }
-    notify(kind === "stop" || kind === "session" ? `${timeLabel(duration({ start, end }))} of actual time recorded.` : `${kind.charAt(0).toUpperCase() + kind.slice(1)} ${id ? "updated" : "created"}.`);
+    notify(kind === "stop" || kind === "session" ? `${session ? "Session updated. " : ""}${timeLabel(duration({ start, end }))} of actual time recorded.` : `${kind.charAt(0).toUpperCase() + kind.slice(1)} ${id ? "updated" : "created"}.`);
     close();
   }
 
-  if (session) return <DialogContent className="editor-dialog"><DialogHeader><div className="dialog-symbol"><Clock3 size={22} /></div><DialogTitle>Session details</DialogTitle><DialogDescription>Actual time dedicated to {data.projects.find((p) => p.id === session.projectId)?.name}.</DialogDescription></DialogHeader><div className="session-detail-duration">{timeLabel(duration(session))}<span>Actual time</span></div><dl className="detail-list"><div><dt>Date</dt><dd>{dateLabel(session.date, { month: "long", day: "numeric", year: "numeric" })}</dd></div><div><dt>Time</dt><dd>{session.start}–{session.end}</dd></div><div><dt>Recorded with</dt><dd>{session.source}</dd></div></dl><h3>Associated Tasks</h3>{session.taskIds.length ? <ul className="linked-tasks">{session.taskIds.map((tid) => <li key={tid}>{data.tasks.find((t) => t.id === tid)?.title ?? "Task"}</li>)}</ul> : <p className="muted">No Tasks associated. This time still counts.</p>}<Button variant="outline" onClick={close}>Done</Button></DialogContent>;
+  if (session && kind === "session-detail") return <DialogContent className="editor-dialog"><DialogHeader><div className="dialog-symbol"><Clock3 size={22} /></div><DialogTitle>Session details</DialogTitle><DialogDescription>Actual time dedicated to {data.projects.find((p) => p.id === session.projectId)?.name}.</DialogDescription></DialogHeader><div className="session-detail-duration">{timeLabel(duration(session))}<span>Actual time</span></div><dl className="detail-list"><div><dt>Date</dt><dd>{dateLabel(session.date, { month: "long", day: "numeric", year: "numeric" })}</dd></div><div><dt>Time</dt><dd>{session.start}–{session.end}</dd></div><div><dt>Recorded with</dt><dd>{session.source}</dd></div></dl><h3>Associated Tasks</h3>{session.taskIds.length ? <ul className="linked-tasks">{session.taskIds.map((tid) => <li key={tid}>{data.tasks.find((t) => t.id === tid)?.title ?? "Task"}</li>)}</ul> : <p className="muted">No Tasks associated. This time still counts.</p>}<div className="form-actions"><Button variant="outline" onClick={close}>Done</Button><Button onClick={() => open({ kind: "session", id: session.id })}>Edit Session</Button></div></DialogContent>;
 
   return <DialogContent className="editor-dialog"><DialogHeader><div className="dialog-symbol"><Icon size={22} /></div><DialogTitle>{labels[kind]}</DialogTitle><DialogDescription>{kind === "timebox" ? "A Timebox is an intention. Record actual work separately as a Session." : kind === "stop" ? "Review the actual interval. Your planned time and Tasks stay unchanged." : kind === "start" ? "Give your attention to one Project. Tasks are optional." : kind === "session" ? "Capture work you already did, whether or not it was planned." : "Keep it simple. You can always adjust this later."}</DialogDescription></DialogHeader>
     <form onSubmit={submit} className="editor-form">

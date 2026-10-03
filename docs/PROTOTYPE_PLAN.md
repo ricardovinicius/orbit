@@ -7,7 +7,7 @@ Sources: [PRD](./PRD.md) · [Design workflow](./DESIGN.md)
 
 Prototype the complete personal planning loop: define Projects, identify Checkpoints, create Tasks, plan a week with Timeboxes, record Sessions, and review progress.
 
-The deliverable will be a navigable prototype of the five main views, shared forms, and representative states described below. It should let a reviewer assess information hierarchy, navigation, and everyday workflows before production implementation.
+The deliverable will be a navigable prototype of the six main views, shared forms, and representative states described below. It should let a reviewer assess information hierarchy, navigation, and everyday workflows before production implementation.
 
 This document is the textual design stage. Approval covers the proposed screens, flows, assumptions, and scope; implementation has not started.
 
@@ -35,7 +35,7 @@ The code prototype uses fixtures and temporary UI state, without a backend, auth
 
 ## 4. Navigation and shared layout
 
-Primary navigation: **Today · Week · Projects · Progress**. A Project detail screen opens from Projects or any linked Project name.
+Primary navigation: **Today · Week · Projects · Sessions · Progress**. A Project detail screen opens from Projects or any linked Project name.
 
 Use a persistent desktop sidebar, a page title with contextual actions, and a visible active-Session control across views. Forms open in a consistent dialog or sheet so users retain their place. Use a full-page form treatment on narrow screens when needed.
 
@@ -108,7 +108,7 @@ Layout:
 
 Interactions: add/edit a Checkpoint; add/edit/complete/reschedule a Task; plan a Timebox; start or manually register a Session; inspect a Session; navigate to Week with the Project in context.
 
-Variants: populated Project; newly created Project; overdue Checkpoint; Tasks without Checkpoints; actual work with no planned time. Checkpoint detail uses a shared sheet with its Tasks rather than adding a sixth primary view.
+Variants: populated Project; newly created Project; overdue Checkpoint; Tasks without Checkpoints; actual work with no planned time. Checkpoint detail uses a shared sheet with its Tasks rather than adding another primary view.
 
 ### S05 — Progress
 
@@ -127,6 +127,22 @@ Interactions: change period/Project, inspect a day's activity, open a Project or
 
 Variants: mixed planned/actual data; no activity; planned time without Sessions; Sessions without plans; filtered result with no data. Show zero values honestly and avoid percentage comparisons when planned time is zero.
 
+### S06 — Sessions
+
+**Purpose:** Review and correct recorded time across Projects.
+
+Layout:
+
+- Session history grouped by day, newest first, showing Project, optional Tasks, actual interval, duration, and recording source.
+- Project filter including archived Projects, period presets, and inclusive custom date ranges.
+- Recorded duration, Session count, and Project count for the full filtered selection; daily duration subtotals.
+- Log and start actions, Session details and editing, and deletion with confirmation.
+- Responsive history rows with accessible actions at narrow widths; older days can be expanded without changing totals.
+
+Interactions: filter history, log completed work, edit an interval or association, and cancel or confirm deletion. Changes update the shared Session data and actual-time totals on Today, Project, and Progress. Tasks and planned Timeboxes remain independent.
+
+Variants: populated week; no history; no matching results; invalid date range; archived Project history; active Session; edit validation; delete confirmation. Charts and planned-versus-actual comparisons remain in Progress.
+
 ## 6. Shared forms and supporting surfaces
 
 | ID | Surface | Fields and actions | Important states |
@@ -137,8 +153,9 @@ Variants: mixed planned/actual data; no activity; planned time without Sessions;
 | F04 | Timebox form/detail | Required Project, date, start/end, optional Tasks, recurrence; create/save | No Tasks; several Tasks; invalid interval; overlap advisory |
 | F05 | Start Session | Required Project and optional Tasks; start | Prefilled from a Timebox; ad hoc start; existing active Session |
 | F06 | Active/stop Session | Project, associated Tasks, mock elapsed time; stop and review actual start/end before saving | Running; stopped review; invalid adjusted interval; saved |
-| F07 | Register completed Session | Required Project, date and actual start/end, optional Tasks; save | Historical entry; missing Project; invalid interval |
-| F08 | Session detail | Project, actual start/end and duration, associated Tasks | Recorded manually; timer-created; no associated Tasks |
+| F07 | Register/edit completed Session | Required Project, date and actual start/end, optional Tasks; save | Historical entry; missing Project; invalid interval; edit preserves recording source |
+| F08 | Session detail | Project, actual start/end and duration, associated Tasks; open editor | Recorded manually; timer-created; no associated Tasks |
+| F10 | Delete Session confirmation | Project, date, interval, and duration removed; keep or delete | Cancellation restores focus; deletion updates actual-time totals |
 | F09 | Recurrence controls | Daily, selected weekdays, or weekly; interval and optional end date; edit one occurrence or series | Summary preview; occurrence edit; series edit confirmation |
 
 Project selection limits Checkpoint and Task choices to that Project. Changing Project clears incompatible selections with an explanation. Keep validation near the affected field and retain entered values.
@@ -207,7 +224,7 @@ Keep the PRD's explicit exclusions out of the prototype: collaboration, complex 
 
 ## 12. Acceptance and approval checklist
 
-- [ ] The five main views and shared surfaces cover the PRD's MVP.
+- [ ] The six main views and shared surfaces cover the PRD's MVP.
 - [ ] Flows A–G can be demonstrated using consistent mock data.
 - [ ] Planned time is never presented as actual effort, and Task completion is independent of Session recording.
 - [ ] Optional relationships, recurrence edits, empty states, overdue work, and invalid forms are understandable.
