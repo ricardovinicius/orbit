@@ -14,7 +14,7 @@ import { PageHeading, ProjectTag } from "./shared";
 import { useWorkspace } from "./workspace";
 
 export function SessionsScreen() {
-  const { data, setData, active, open, notify } = useWorkspace();
+  const { data, setData, active, open, notify, undoFor } = useWorkspace();
   const [project, setProject] = useState("all");
   const [period, setPeriod] = useState("week");
   const [from, setFrom] = useState(WEEK_START);
@@ -147,7 +147,7 @@ export function SessionsScreen() {
           if (!deleting) return;
           setData((current) => ({ ...current, sessions: current.sessions.filter((session) => session.id !== deleting.id) }));
           deleted.current = true;
-          notify("Session deleted. Recorded time has been updated.");
+          notify("Session deleted. Recorded time has been updated.", undoFor("sessions", [deleting.id]));
         }}>Delete Session</AlertDialogAction></AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

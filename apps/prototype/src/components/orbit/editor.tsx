@@ -15,7 +15,7 @@ export type EditorRequest = { kind: "project" | "checkpoint" | "task" | "timebox
 export function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: ReactNode }) { return <div className="form-field"><Label htmlFor={htmlFor}>{label}</Label>{children}</div>; }
 
 export function Editor({ request, close }: { request: EditorRequest; close: () => void }) {
-  const { data, setData, active, setActive, notify, open } = useWorkspace();
+  const { data, setData, active, setActive, notify, undoFor, open } = useWorkspace();
   const { kind, id } = request;
   const project = kind === "project" ? data.projects.find((p) => p.id === id) : undefined;
   const task = kind === "task" ? data.tasks.find((t) => t.id === id) : undefined;
@@ -58,9 +58,13 @@ export function Editor({ request, close }: { request: EditorRequest; close: () =
     if (kind === "start") {
       if (active) { setError("Finish your active Session before starting another."); return; }
       setActive({ projectId, date: TODAY, start: "15:00", taskIds });
-      notify("Session started. The demo timer shows a prepared 25-minute state."); close(); return;
+      notify("Session started. The demo timer shows a prepared 25-minute state.", undoFor(undefined, [], true)); close(); return;
     }
     const nextId = id ?? `${kind}-${crypto.randomUUID()}`;
+    const collection = { project: "projects", checkpoint: "checkpoints", task: "tasks", timebox: "timeboxes", session: "sessions", stop: "sessions", "session-detail": "sessions" }[kind] as keyof typeof data;
+    const seriesId = scope === "series" ? (task ?? box)?.seriesId : undefined;
+    const affectedIds = seriesId ? data[collection].filter((record) => "seriesId" in record && record.seriesId === seriesId).map((record) => record.id) : [];
+    const undo = undoFor(collection, [...affectedIds, nextId], kind === "stop");
     if (kind === "project") setData((d) => ({ ...d, projects: project ? d.projects.map((p) => p.id === id ? { ...p, name: title.trim(), description, color } : p) : [...d.projects, { id: nextId, name: title.trim(), description, color }] }));
     if (kind === "checkpoint") setData((d) => ({ ...d, checkpoints: checkpoint ? d.checkpoints.map((c) => c.id === id ? { ...c, title: title.trim(), date } : c) : [...d.checkpoints, { id: nextId, projectId, title: title.trim(), date }] }));
     if (kind === "task") setData((d) => {
@@ -75,7 +79,7 @@ export function Editor({ request, close }: { request: EditorRequest; close: () =
       setData((d) => ({ ...d, sessions: session ? d.sessions.map((item) => item.id === id ? { ...item, projectId, date, start, end, taskIds } : item) : [...d.sessions, { id: nextId, projectId, date, start, end, taskIds, source: kind === "stop" ? "Timer" : "Manual" }] }));
       if (kind === "stop") setActive(null);
     }
-    notify(kind === "stop" || kind === "session" ? `${session ? "Session updated. " : ""}${timeLabel(duration({ start, end }))} of actual time recorded.` : `${kind.charAt(0).toUpperCase() + kind.slice(1)} ${id ? "updated" : "created"}.`);
+    notify(kind === "stop" || kind === "session" ? `${session ? "Session updated. " : ""}${timeLabel(duration({ start, end }))} of actual time recorded.` : `${kind.charAt(0).toUpperCase() + kind.slice(1)} ${id ? "updated" : "created"}.`, undo);
     close();
   }
 
@@ -97,8 +101,8 @@ export function Editor({ request, close }: { request: EditorRequest; close: () =
       {error && <p className="form-error" role="alert">{error}</p>}
       <div className="form-actions"><Button type="button" variant="outline" onClick={close}>Cancel</Button><Button type="submit" disabled={kind === "start" && !!active}>{kind === "start" ? <><Play size={14} />Start Session</> : kind === "stop" ? "Save Session" : id ? "Save changes" : `Create ${kind === "session" ? "Session" : kind === "timebox" ? "Timebox" : kind === "task" ? "Task" : kind === "project" ? "Project" : "Checkpoint"}`}</Button></div>
       {box && <Button type="button" className="w-full" variant="secondary" onClick={() => open({ kind: "start", projectId: box.projectId, taskIds: box.taskIds })}><Play size={14} />Start a Session for this Timebox</Button>}
-      {task && <Button type="button" variant="secondary" className="w-full" onClick={() => { setData((d) => ({ ...d, tasks: d.tasks.map((t) => t.id === task.id ? { ...t, done: !t.done, completedDate: !t.done ? TODAY : undefined } : t) })); notify(task.done ? "Task reopened." : "Task completed. No time was recorded."); close(); }}>{task.done ? "Reopen Task" : "Mark Task complete"}</Button>}
-      {project && <div className="archive-control">{archiveConfirm ? <><p>Archive this Project? Its Tasks and recorded activity will remain available.</p><Button type="button" variant="destructive" onClick={() => { setData((d) => ({ ...d, projects: d.projects.map((p) => p.id === id ? { ...p, archived: true } : p) })); notify("Project archived. Your history is preserved."); close(); }}>Archive Project</Button><Button type="button" variant="ghost" onClick={() => setArchiveConfirm(false)}>Keep active</Button></> : <Button type="button" variant="ghost" onClick={() => { if (project.archived) { setData((d) => ({ ...d, projects: d.projects.map((p) => p.id === id ? { ...p, archived: false } : p) })); notify("Project reactivated."); close(); } else setArchiveConfirm(true); }}><Archive size={14} />{project.archived ? "Reactivate Project" : "Archive Project"}</Button>}</div>}
+      {task && <Button type="button" variant="secondary" className="w-full" onClick={() => { setData((d) => ({ ...d, tasks: d.tasks.map((t) => t.id === task.id ? { ...t, done: !t.done, completedDate: !t.done ? TODAY : undefined } : t) })); notify(task.done ? "Task reopened." : "Task completed. No time was recorded.", undoFor("tasks", [task.id])); close(); }}>{task.done ? "Reopen Task" : "Mark Task complete"}</Button>}
+      {project && <div className="archive-control">{archiveConfirm ? <><p>Archive this Project? Its Tasks and recorded activity will remain available.</p><Button type="button" variant="destructive" onClick={() => { setData((d) => ({ ...d, projects: d.projects.map((p) => p.id === id ? { ...p, archived: true } : p) })); notify("Project archived. Your history is preserved.", undoFor("projects", [project.id])); close(); }}>Archive Project</Button><Button type="button" variant="ghost" onClick={() => setArchiveConfirm(false)}>Keep active</Button></> : <Button type="button" variant="ghost" onClick={() => { if (project.archived) { setData((d) => ({ ...d, projects: d.projects.map((p) => p.id === id ? { ...p, archived: false } : p) })); notify("Project reactivated.", undoFor("projects", [project.id])); close(); } else setArchiveConfirm(true); }}><Archive size={14} />{project.archived ? "Reactivate Project" : "Archive Project"}</Button>}</div>}
     </form>
   </DialogContent>;
 }

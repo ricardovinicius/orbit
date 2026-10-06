@@ -5,9 +5,10 @@
 - [x] Remove the topbar
 - [x] Increase typography for readability
 - [x] Make Timeboxes look like containers for planned Tasks
-- [ ] Add Undo to mutation notifications
+- [x] Add Undo to mutation notifications
 - [ ] Match the favicon to the logo
 - [ ] Make sidebar shrink
+- [ ] Make the session timer bar sticky
 - [ ] Improve the UI with drag-n-drop
     - [ ] dnd on week plan calendar
 - [ ] Implement and review the feedback_01 changes
@@ -45,10 +46,10 @@ Implement in this order so the shared layout and typography are settled before r
    - Acceptance: Today, Week, and Project detail consistently show Timeboxes as planned containers; zero, one, and several linked Tasks are understandable. Dashed boundaries and labels distinguish planned time from actual Sessions beyond color alone.
 
 4. **Add Undo to mutation notifications.**
-   - [ ] Extend the notification state/API in `src/components/orbit/workspace.tsx` with an optional Undo action, using shadcn components where appropriate.
-   - [ ] Wire reversible operations in `shared.tsx`, `editor.tsx`, and `sessions.tsx`: Task completion/reopening, create/edit/reschedule actions, Project archive/reactivation, Session deletion, and Session start/stop/save.
-   - [ ] Capture the affected records and active-Session state before each change. Undo restores only that operation, including all occurrences affected by a series edit, without rolling back unrelated later work; shared totals update from the restored data.
-   - [ ] Support one Undo per notification, invalidate the action when the notice is replaced/dismissed or fixtures reset, and omit Undo for informational notices. Keep Undo available until dismissal or replacement, with keyboard access and an announced result.
+   - [x] Extend the notification state/API in `src/components/orbit/workspace.tsx` with an optional Undo action, using shadcn components where appropriate.
+   - [x] Wire reversible operations in `shared.tsx`, `editor.tsx`, and `sessions.tsx`: Task completion/reopening, create/edit/reschedule actions, Project archive/reactivation, Session deletion, and Session start/stop/save.
+   - [x] Capture the affected records and active-Session state before each change. Undo restores only that operation, including all occurrences affected by a series edit, without rolling back unrelated later work; shared totals update from the restored data.
+   - [x] Support one Undo per notification, invalidate the action when the notice is replaced/dismissed or fixtures reset, and omit Undo for informational notices. Keep Undo available until dismissal or replacement, with keyboard access and an announced result.
    - Acceptance: Undo works once for each supported mutation, restores Session totals and Task completion dates, and cannot apply stale changes after a scenario switch. Undoing a stopped/saved Session restores its previous active state without leaving a duplicate recorded Session.
 
 5. **Match the favicon to the logo.**

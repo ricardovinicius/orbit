@@ -3,11 +3,12 @@
 import { createContext, useContext, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, Clock3, FlaskConical, FolderClosed, Orbit, Play, Plus, SlidersHorizontal, Square, Sun, X } from "lucide-react";
+import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, Clock3, FlaskConical, FolderClosed, Orbit, Play, Plus, SlidersHorizontal, Square, Sun, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { initialData, emptyData, TODAY, type Dataset, type Session } from "@/lib/mock-data";
+import { restoreRecords } from "@/lib/undo";
 import { ThemeToggle } from "./theme-toggle";
 import { Editor, type EditorRequest } from "./editor";
 
@@ -18,7 +19,8 @@ type Workspace = {
   active: ActiveSession | null;
   setActive: React.Dispatch<React.SetStateAction<ActiveSession | null>>;
   open: (request: EditorRequest) => void;
-  notify: (message: string) => void;
+  notify: (message: string, undo?: () => void) => void;
+  undoFor: (collection?: keyof Dataset, ids?: string[], restoreActive?: boolean) => () => void;
 };
 const WorkspaceContext = createContext<Workspace | null>(null);
 export function useWorkspace() {
@@ -39,7 +41,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<Dataset>(initialData);
   const [active, setActive] = useState<ActiveSession | null>(null);
   const [editor, setEditor] = useState<EditorRequest | null>(null);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState<{ message: string; undo?: () => void } | null>(null);
+  const noticeRef = useRef<typeof notice>(null);
   const [review, setReview] = useState(false);
   const [state, setState] = useState("populated");
   const trigger = useRef<HTMLElement | null>(null);
@@ -49,16 +52,37 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setEditor(request);
   }
   function close() { setEditor(null); requestAnimationFrame(() => trigger.current?.focus()); }
+  function notify(message: string, undo?: () => void) {
+    const next = { message, undo };
+    noticeRef.current = next;
+    setNotice(next);
+  }
+  function dismissNotice() { noticeRef.current = null; setNotice(null); }
+  function undoNotice() {
+    const current = noticeRef.current;
+    if (!current?.undo) return;
+    noticeRef.current = null;
+    current.undo();
+    notify("Change undone.");
+  }
+  function undoFor(collection?: keyof Dataset, ids: string[] = [], restoreActive = false) {
+    const previousActive = active;
+    const records = collection ? data[collection].filter((record) => ids.includes(record.id)) : [];
+    return () => {
+      if (collection) setData((current) => ({ ...current, [collection]: restoreRecords(current[collection], records, ids) }));
+      if (restoreActive) setActive(previousActive);
+    };
+  }
   function fixture(next: string) {
     setState(next);
     setData(next === "empty" ? emptyData : initialData);
     setActive(next === "active" ? { projectId: "research", date: TODAY, start: "15:00", taskIds: ["t1"] } : null);
     setReview(false);
-    setNotice("");
+    dismissNotice();
   }
   const activeProject = data.projects.find((p) => p.id === active?.projectId);
   return (
-    <WorkspaceContext.Provider value={{ data, setData, active, setActive, open, notify: setNotice }}>
+    <WorkspaceContext.Provider value={{ data, setData, active, setActive, open, notify, undoFor }}>
       <TooltipProvider>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <div className="app-shell">
@@ -87,7 +111,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             </main>
           </div>
         </div>
-        {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={16} /></button></div>}
+        {notice && <div className="notice" role="status"><span>{notice.message}</span>{notice.undo && <Button variant="secondary" size="icon-sm" aria-label="Undo change" title="Undo change" onClick={undoNotice}><Undo2 /></Button>}<Button variant="secondary" size="icon-sm" aria-label="Dismiss notification" onClick={dismissNotice}><X /></Button></div>}
         <Dialog open={!!editor} onOpenChange={(value) => { if (!value) close(); }}>
           {editor && <Editor key={`${editor.kind}-${editor.id ?? "new"}-${editor.projectId ?? ""}`} request={editor} close={close} />}
         </Dialog>
