@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, Clock3, Flag, Plus, Repeat2 } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Flag, Plus, Repeat2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TODAY, WEEK_START, addDays, dateLabel, duration, inRange, minutes, timeLabel, type Checkpoint, type Timebox } from "@/lib/mock-data";
@@ -58,6 +58,8 @@ export function WeekScreen() {
   const [week, setWeek] = useState(WEEK_START);
   const [project, setProject] = useState("all");
   const [mobileDay, setMobileDay] = useState(3);
+  const calendarScrollRef = useRef<HTMLDivElement>(null);
+  const [todayScrollRequest, setTodayScrollRequest] = useState(0);
   const days = Array.from({ length: 7 }, (_, i) => addDays(week, i));
   const boxes = data.timeboxes.filter((b) => inRange(b.date, week, addDays(week, 6)) && (project === "all" || b.projectId === project));
   const checkpoints = data.checkpoints
@@ -66,13 +68,28 @@ export function WeekScreen() {
   const dayCheckpoints = checkpoints.filter((c) => c.date === days[mobileDay]);
   const tasks = data.tasks.filter((t) => !t.done && (project === "all" || t.projectId === project));
   const unscheduled = tasks.filter((t) => !t.date);
-  const firstHour = Math.min(8, ...boxes.map((b) => Math.floor(minutes(b.start) / 60)));
-  const lastHour = Math.max(19, ...boxes.map((b) => Math.ceil(minutes(b.end) / 60)));
+  const firstHour = 12;
+  const lastHour = 24;
   const hours = Array.from({ length: lastHour - firstHour }, (_, i) => i + firstHour);
+  useLayoutEffect(() => {
+    if (!todayScrollRequest) return;
+    const viewport = calendarScrollRef.current;
+    if (!viewport || !viewport.clientHeight) return;
+    const current = new Date();
+    const currentMinutes = current.getHours() * 60 + current.getMinutes();
+    const lineTop = (currentMinutes - firstHour * 60) / 60 * 54;
+    viewport.scrollTo({
+      top: Math.max(0, Math.min(lineTop - viewport.clientHeight / 2, viewport.scrollHeight - viewport.clientHeight)),
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+    });
+  }, [todayScrollRequest, firstHour]);
+
   const planned = boxes.reduce((n, b) => n + duration(b), 0);
-  return <>
-    <PageHeading title="Week"><Button onClick={() => open({ kind: "timebox", date: days[mobileDay], projectId: project === "all" ? undefined : project })}><Plus size={16} />Add Timebox</Button></PageHeading>
-    <div className="week-toolbar"><div className="week-navigation"><div className="arrow-group"><Button variant="ghost" size="icon-sm" aria-label="Previous week" onClick={() => setWeek(addDays(week, -7))}><ChevronLeft /></Button><Button variant="ghost" size="icon-sm" aria-label="Next week" onClick={() => setWeek(addDays(week, 7))}><ChevronRight /></Button></div><h2>{dateLabel(week)} – {dateLabel(addDays(week, 6))}, 2026</h2><Button variant="outline" size="sm" onClick={() => { setWeek(WEEK_START); setMobileDay(3); }}>Today</Button></div><select aria-label="Filter calendar by Project" className="compact-select" value={project} onChange={(e) => setProject(e.target.value)}><option value="all">All Projects</option>{data.projects.map((p) => <option value={p.id} key={p.id}>{p.name}</option>)}</select></div>
+  return <div className="week-screen">
+    <PageHeading title="Week">
+      <div className="week-toolbar"><div className="week-navigation"><div className="arrow-group"><Button variant="ghost" size="icon-sm" aria-label="Previous week" onClick={() => setWeek(addDays(week, -7))}><ChevronLeft /></Button><Button variant="ghost" size="icon-sm" aria-label="Next week" onClick={() => setWeek(addDays(week, 7))}><ChevronRight /></Button></div><h2>{dateLabel(week)} – {dateLabel(addDays(week, 6))}, 2026</h2><Button variant="outline" size="sm" onClick={() => { setWeek(WEEK_START); setMobileDay(3); setTodayScrollRequest((request) => request + 1); }}>Today</Button></div><select aria-label="Filter calendar by Project" className="compact-select" value={project} onChange={(e) => setProject(e.target.value)}><option value="all">All Projects</option>{data.projects.map((p) => <option value={p.id} key={p.id}>{p.name}</option>)}</select></div>
+      <Button onClick={() => open({ kind: "timebox", date: days[mobileDay], projectId: project === "all" ? undefined : project })}><Plus size={16} />Add Timebox</Button>
+    </PageHeading>
     <div className="week-layout"><div>
       <Card className="calendar-panel"><div className="calendar-desktop"><div className="calendar-head"><div className="calendar-timezone">LOCAL</div>{days.map((d) => <div className={`calendar-day ${d === TODAY ? "is-today" : ""}`} key={d}><span>{dateLabel(d, { weekday: "short" })}</span><strong>{Number(d.slice(-2))}</strong>{d === TODAY && <small>Today</small>}</div>)}</div>
         <section className="calendar-checkpoint-strip" aria-label="Checkpoint deadlines">
@@ -87,11 +104,11 @@ export function WeekScreen() {
           })}
         </section>
         <div className="calendar-task-strip"><span className="task-strip-label">TASKS</span>{days.map((d) => <div key={d}>{tasks.filter((t) => t.date === d).map((t) => <button className="calendar-task" key={t.id} onClick={() => open({ kind: "task", id: t.id })}><span className={`project-dot ${data.projects.find((p) => p.id === t.projectId)?.color}`} />{t.title}</button>)}<button className="calendar-add-task" aria-label={`Add Task for ${dateLabel(d)}`} onClick={() => open({ kind: "task", date: d, projectId: project === "all" ? undefined : project })}><Plus size={11} /></button></div>)}</div>
-        <div className="calendar-body" style={{ height: hours.length * 54 }}><div className="hour-labels">{hours.map((hour) => <span key={hour} style={{ top: (hour - firstHour) * 54 }}>{String(hour).padStart(2, "0")}:00</span>)}</div>{days.map((d) => <div key={d} className={`calendar-column ${d === TODAY ? "today-column" : ""}`}>
+        <div ref={calendarScrollRef} className="calendar-time-scroll" role="region" aria-label="Calendar hours from 12pm to 11pm" tabIndex={0}><div className="calendar-body" style={{ height: hours.length * 54 }}><div className="hour-labels">{hours.map((hour) => <span key={hour} style={{ top: (hour - firstHour) * 54 }}>{String(hour).padStart(2, "0")}:00</span>)}</div>{days.map((d) => <div key={d} className={`calendar-column ${d === TODAY ? "today-column" : ""}`}>
           {d === TODAY && now && now.minutes >= firstHour * 60 && now.minutes < lastHour * 60 && <CurrentTimeLine label={now.label} top={(now.minutes - firstHour * 60) / 60 * 54} />}
           {hours.map((hour) => <button className="calendar-slot" key={hour} style={{ top: (hour - firstHour) * 54 }} aria-label={`Plan ${dateLabel(d)} at ${hour}:00`} onClick={() => open({ kind: "timebox", date: d, start: `${String(hour).padStart(2, "0")}:00`, projectId: project === "all" ? undefined : project })}><Plus size={13} /></button>)}
-          {placeBoxes(boxes.filter((b) => b.date === d)).map(({ box: b, lane, columns }) => <button key={b.id} className={`calendar-block ${data.projects.find((p) => p.id === b.projectId)?.color}`} style={{ top: (minutes(b.start) - firstHour * 60) / 60 * 54, height: Math.max(duration(b) / 60 * 54 - 3, 22), left: `calc(${lane / columns * 100}% + 3px)`, width: `calc(${100 / columns}% - 6px)` }} aria-label={`${b.title}, planned time ${b.start}–${b.end}. ${b.taskIds.map((id) => data.tasks.find((t) => t.id === id)?.title).filter(Boolean).join(", ") || "Project time"}`} onClick={() => open({ kind: "timebox", id: b.id })}><strong>{data.projects.find((p) => p.id === b.projectId)?.name}{b.recurrence !== "none" && <Repeat2 size={11} />}</strong><span>{b.start}–{b.end} · Planned</span>{duration(b) >= 60 && <small>{duration(b) < 90 ? b.taskIds.length ? `${b.taskIds.length} planned ${b.taskIds.length === 1 ? "Task" : "Tasks"}` : "Project time" : b.title}</small>}{duration(b) >= 90 && <PlannedTasks box={b} compact />}</button>)}
-        </div>)}</div></div>
+          {placeBoxes(boxes.filter((b) => b.date === d && minutes(b.end) > firstHour * 60 && minutes(b.start) < lastHour * 60)).map(({ box: b, lane, columns }) => <button key={b.id} className={`calendar-block ${data.projects.find((p) => p.id === b.projectId)?.color}`} style={{ top: (Math.max(minutes(b.start), firstHour * 60) - firstHour * 60) / 60 * 54, height: Math.max((Math.min(minutes(b.end), lastHour * 60) - Math.max(minutes(b.start), firstHour * 60)) / 60 * 54 - 3, 22), left: `calc(${lane / columns * 100}% + 3px)`, width: `calc(${100 / columns}% - 6px)` }} aria-label={`${b.title}, planned time ${b.start}–${b.end}. ${b.taskIds.map((id) => data.tasks.find((t) => t.id === id)?.title).filter(Boolean).join(", ") || "Project time"}`} onClick={() => open({ kind: "timebox", id: b.id })}><strong><span>{data.projects.find((p) => p.id === b.projectId)?.name}</span>{b.recurrence !== "none" && <Repeat2 size={11} />}</strong><span>{b.start}–{b.end} · Planned</span>{duration(b) >= 60 && <small>{duration(b) < 90 ? b.taskIds.length ? `${b.taskIds.length} planned ${b.taskIds.length === 1 ? "Task" : "Tasks"}` : "Project time" : b.title}</small>}{duration(b) >= 90 && <PlannedTasks box={b} compact />}</button>)}
+        </div>)}</div></div></div>
         <div className="calendar-mobile">
           <div className="mobile-day-picker">{days.map((d, i) => <button key={d} className={i === mobileDay ? "selected" : ""} aria-pressed={i === mobileDay} onClick={() => setMobileDay(i)}><span>{dateLabel(d, { weekday: "short" })}</span><strong>{Number(d.slice(-2))}</strong></button>)}</div>
           <div className="mobile-agenda">
@@ -108,7 +125,7 @@ export function WeekScreen() {
       </Card>
     </div><div className="week-side">
       <Card className="panel"><SectionHeading title="Unscheduled Tasks" count={unscheduled.length}><Button variant="ghost" size="icon-xs" aria-label="Add unscheduled Task" onClick={() => open({ kind: "task", date: "", projectId: project === "all" ? undefined : project })}><Plus /></Button></SectionHeading><div className="unscheduled-list">{unscheduled.map((t) => <div className="unscheduled-task" key={t.id}><ProjectTag id={t.projectId} /><strong>{t.title}</strong><Button variant="ghost" size="sm" onClick={() => open({ kind: "task", id: t.id })}>Assign day<ArrowRight size={13} /></Button></div>)}{!unscheduled.length && <EmptyState compact title="Everything has a place" description="Unscheduled Tasks will appear here." />}</div></Card>
-      <Card className="panel week-summary"><span className="eyebrow">PLANNED TIME</span><div className="week-total">{timeLabel(planned)}<small>planned</small></div><div className="allocation-list">{data.projects.filter((p) => boxes.some((b) => b.projectId === p.id)).map((p) => { const amount = boxes.filter((b) => b.projectId === p.id).reduce((n, b) => n + duration(b), 0); return <div key={p.id}><div><ProjectTag id={p.id} /><span>{timeLabel(amount)}</span></div><div className="allocation-track"><span className={p.color} style={{ width: `${planned ? amount / planned * 100 : 0}%` }} /></div></div>; })}</div><p className="gentle-note"><Clock3 size={16} />A plan is a starting point. It’s okay if your week unfolds differently.</p><Button asChild variant="ghost"><Link href="/progress">Review actual time<ArrowRight size={14} /></Link></Button></Card>
+      <Card className="panel week-summary"><span className="eyebrow">PLANNED TIME</span><div className="week-total">{timeLabel(planned)}<small>planned</small></div><div className="allocation-list">{data.projects.filter((p) => boxes.some((b) => b.projectId === p.id)).map((p) => { const amount = boxes.filter((b) => b.projectId === p.id).reduce((n, b) => n + duration(b), 0); return <div key={p.id}><div><ProjectTag id={p.id} /><span>{timeLabel(amount)}</span></div><div className="allocation-track"><span className={p.color} style={{ width: `${planned ? amount / planned * 100 : 0}%` }} /></div></div>; })}</div><Button asChild variant="ghost"><Link href="/progress">Review actual time<ArrowRight size={14} /></Link></Button></Card>
     </div></div>
-  </>;
+  </div>;
 }
