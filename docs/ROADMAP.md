@@ -4,9 +4,12 @@
 - [x] Plan the [feedback_01](./feedbacks/feedback_01.md) changes (implementation plan below)
 - [x] Remove the topbar
 - [x] Increase typography for readability
-- [ ] Make Timeboxes look like containers for planned Tasks
+- [x] Make Timeboxes look like containers for planned Tasks
 - [ ] Add Undo to mutation notifications
 - [ ] Match the favicon to the logo
+- [ ] Make sidebar shrink
+- [ ] Improve the UI with drag-n-drop
+    - [ ] dnd on week plan calendar
 - [ ] Implement and review the feedback_01 changes
 - [ ] Move prototype to Figma
 - [ ] Evaluate the prototype asking for feedback 
@@ -36,9 +39,9 @@ Implement in this order so the shared layout and typography are settled before r
    - Acceptance: primary labels and task names are visibly larger at normal zoom; text and actions remain legible without clipping in representative populated and crowded desktop states, in both themes.
 
 3. **Make Timeboxes look like containers for planned Tasks.**
-   - [ ] Update `src/components/orbit/shared.tsx`, `src/components/orbit/week.tsx`, and their shared styles to use translucent Project-tinted backgrounds and dashed outlines, with readable solid text.
-   - [ ] Show linked Task titles inside the Timebox, rather than only a count or the Timebox title. Retain Project identity, interval, recurrence, and an explicit planned-time label; use “Project time” for Timeboxes with no Tasks.
-   - [ ] For short or overlapping calendar blocks, prioritize Project and interval, summarize hidden Tasks with a count, and expose the full list through Timebox details. Keep the current-time line visible and preserve the separate day-assigned Task strip.
+   - [x] Update `src/components/orbit/shared.tsx`, `src/components/orbit/week.tsx`, and their shared styles to use translucent Project-tinted backgrounds and dashed outlines, with readable solid text.
+   - [x] Show linked Task titles inside the Timebox, rather than only a count or the Timebox title. Retain Project identity, interval, recurrence, and an explicit planned-time label; use “Project time” for Timeboxes with no Tasks.
+   - [x] For short or overlapping calendar blocks, prioritize Project and interval, summarize hidden Tasks with a count, and expose the full list through Timebox details. Keep the current-time line visible and preserve the separate day-assigned Task strip.
    - Acceptance: Today, Week, and Project detail consistently show Timeboxes as planned containers; zero, one, and several linked Tasks are understandable. Dashed boundaries and labels distinguish planned time from actual Sessions beyond color alone.
 
 4. **Add Undo to mutation notifications.**
