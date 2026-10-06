@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, Clock3, FlaskConical, FolderClosed, Orbit, PanelLeftClose, PanelLeftOpen, Play, Plus, SlidersHorizontal, Square, Sun, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { initialData, emptyData, TODAY, type Dataset, type Session } from "@/lib/mock-data";
 import { restoreRecords } from "@/lib/undo";
 import { ThemeToggle } from "./theme-toggle";
@@ -97,7 +97,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             </nav>
             <div className="nav-label project-nav-heading"><span>YOUR PROJECTS</span><Button variant="ghost" size="icon-xs" aria-label="New Project" onClick={() => open({ kind: "project" })}><Plus /></Button></div>
             <nav aria-label="Project navigation" className="project-nav">
-              {data.projects.filter((p) => !p.archived).map((p) => <Link href={`/projects/${p.id}`} key={p.id} aria-label={p.name} title={p.name} className={`project-link ${pathname === `/projects/${p.id}` ? "current" : ""}`}><span className={`project-dot ${p.color}`} /><span className="project-name">{p.name}</span></Link>)}
+              {data.projects.filter((p) => !p.archived).map((p) => <Tooltip key={p.id}><TooltipTrigger asChild><Link href={`/projects/${p.id}`} aria-label={p.name} className={`project-link ${pathname === `/projects/${p.id}` ? "current" : ""}`}><span className={`project-dot ${p.color}`} /><span className="project-name">{p.name}</span></Link></TooltipTrigger>{collapsed && <TooltipContent side="right" sideOffset={12}>{p.name}</TooltipContent>}</Tooltip>)}
               {data.projects.length === 0 && <p className="sidebar-empty">Your focus areas will live here.</p>}
             </nav>
             <div className="sidebar-bottom">

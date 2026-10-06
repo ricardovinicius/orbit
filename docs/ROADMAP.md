@@ -8,9 +8,11 @@
 - [x] Add Undo to mutation notifications
 - [x] Match the favicon to the logo
 - [x] Make sidebar shrink
-- [ ] Make the session timer bar sticky
+- [x] Make the session timer bar sticky
+- [x] When move the mouse over the projects buttons, when collapsed the sidebar, the name of the project must appear as tooltip
 - [ ] Improve the UI with drag-n-drop
     - [ ] dnd on week plan calendar
+    - [ ] order today tasks
 - [ ] Implement and review the feedback_01 changes
 - [ ] Move prototype to Figma
 - [ ] Evaluate the prototype asking for feedback 

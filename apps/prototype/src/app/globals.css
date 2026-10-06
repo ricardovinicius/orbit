@@ -229,7 +229,7 @@ a.project-tag:hover { color: var(--foreground); }
 .panel-footer-actions { padding: 10px 22px 20px; }
 .page-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 30px 0 24px; font-size: var(--text-caption); color: var(--muted-foreground); }
 .page-footer > span:first-child { display: flex; align-items: center; gap: 6px; }
-.active-banner { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 40px; background: var(--success-soft); border-bottom: 1px solid var(--success); }
+.active-banner { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 40px; background: var(--success-soft); border-bottom: 1px solid var(--success); }
 .active-banner > div { display: flex; align-items: center; gap: 12px; font-size: var(--text-small); color: var(--success); }
 .active-banner strong { font-weight: 550; }
 .active-banner small { font-size: var(--text-caption); opacity: .8; }
