@@ -44,7 +44,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState("populated");
   const trigger = useRef<HTMLElement | null>(null);
   const pathname = usePathname();
-  const title = navigation.find((item) => item.href === pathname)?.label ?? "Project";
   function open(request: EditorRequest) {
     trigger.current = document.activeElement as HTMLElement;
     setEditor(request);
@@ -64,7 +63,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         <a className="skip-link" href="#main-content">Skip to content</a>
         <div className="app-shell">
           <aside className="sidebar">
-            <Link href="/" className="brand" aria-label="Orbit home"><Orbit size={29} strokeWidth={1.5} /><span>orbit<span className="brand-period">.</span></span></Link>
+            <div className="sidebar-brand-row"><Link href="/" className="brand" aria-label="Orbit home"><Orbit size={29} strokeWidth={1.5} /><span>orbit<span className="brand-period">.</span></span></Link><ThemeToggle /></div>
             <div className="sidebar-note"><p>Make time for<br /><strong>what matters.</strong></p></div>
             <div className="nav-label">WORKSPACE</div>
             <nav aria-label="Main navigation">
@@ -77,11 +76,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             </nav>
             <div className="sidebar-bottom">
               <button className="review-button" onClick={() => setReview(true)}><SlidersHorizontal size={16} />Prototype controls<ArrowUpRight size={13} /></button>
-              <div className="profile"><span className="profile-avatar">R</span><div>Personal workspace<small>Just you. Your own pace.</small></div></div>
+              <div className="profile"><span className="profile-avatar">R</span><div>Personal workspace</div></div>
             </div>
           </aside>
           <div className="app-body">
-            <header className="topbar"><div className="breadcrumb">My workspace<span>/</span><strong>{title}</strong></div><div className="topbar-right"><ThemeToggle /><button className="prototype-tag" onClick={() => setReview(true)}><span />Prototype</button><span className="topbar-date">Thursday, October 1</span></div></header>
             {active && (pathname !== "/" || state === "loading" || state === "error") && <div className="active-banner" role="status"><div><span className="live-dot" /><strong>{activeProject?.name}</strong><span>Session in progress</span><span className="timer-readout">00:25:00</span><small>Demo timer</small></div><Button size="sm" onClick={() => open({ kind: "stop", projectId: active.projectId })}><Square size={12} fill="currentColor" />Stop & review</Button></div>}
             <main id="main-content" className="main-content">
               {state === "loading" ? <div className="loading-state" role="status" aria-label="Loading workspace"><div className="skeleton heading-skeleton" /><div className="metrics-grid">{[0, 1, 2].map((i) => <div key={i} className="skeleton metric-skeleton" />)}</div><div className="skeleton content-skeleton" /><Button variant="outline" onClick={() => fixture("populated")}>Finish loading preview</Button></div> : state === "error" ? <div className="empty-state error-state"><CircleHelp /><h1>We couldn’t load your workspace</h1><p>Your work hasn’t changed. Try loading it again.</p><Button onClick={() => fixture("populated")}>Try again</Button></div> : children}
