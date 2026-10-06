@@ -3,7 +3,7 @@
 import { createContext, useContext, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, Clock3, FlaskConical, FolderClosed, Orbit, Play, Plus, SlidersHorizontal, Square, Sun, Undo2, X } from "lucide-react";
+import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, Clock3, FlaskConical, FolderClosed, Orbit, PanelLeftClose, PanelLeftOpen, Play, Plus, SlidersHorizontal, Square, Sun, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -43,6 +43,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [editor, setEditor] = useState<EditorRequest | null>(null);
   const [notice, setNotice] = useState<{ message: string; undo?: () => void } | null>(null);
   const noticeRef = useRef<typeof notice>(null);
+  const [collapsed, setCollapsed] = useState(false);
   const [review, setReview] = useState(false);
   const [state, setState] = useState("populated");
   const trigger = useRef<HTMLElement | null>(null);
@@ -85,22 +86,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     <WorkspaceContext.Provider value={{ data, setData, active, setActive, open, notify, undoFor }}>
       <TooltipProvider>
         <a className="skip-link" href="#main-content">Skip to content</a>
-        <div className="app-shell">
-          <aside className="sidebar">
-            <div className="sidebar-brand-row"><Link href="/" className="brand" aria-label="Orbit home"><Orbit size={29} strokeWidth={1.5} /><span>orbit<span className="brand-period">.</span></span></Link><ThemeToggle /></div>
+        <div className="app-shell" data-sidebar-collapsed={collapsed}>
+          <aside className="sidebar" id="workspace-sidebar">
+            <div className="sidebar-brand-row"><Link href="/" className="brand" aria-label="Orbit home"><Orbit size={29} strokeWidth={1.5} /><span>orbit<span className="brand-period">.</span></span></Link><span className="mobile-theme-toggle"><ThemeToggle /></span>
+            <Button variant="secondary" size="icon-sm" className="sidebar-toggle" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} aria-controls="workspace-sidebar" onClick={() => setCollapsed((value) => !value)}>{collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}</Button></div>
             <div className="sidebar-note"><p>Make time for<br /><strong>what matters.</strong></p></div>
             <div className="nav-label">WORKSPACE</div>
             <nav aria-label="Main navigation">
-              {navigation.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={`nav-item ${pathname === href || (href === "/projects" && pathname.startsWith("/projects/")) ? "selected" : ""}`} aria-current={pathname === href || (href === "/projects" && pathname.startsWith("/projects/")) ? "page" : undefined}><Icon size={18} strokeWidth={1.7} /><span>{label}</span>{label === "Today" && <span className="nav-count">{data.tasks.filter((t) => t.date === TODAY && !t.done).length}</span>}</Link>)}
+              {navigation.map(({ href, label, icon: Icon }) => <Link key={href} href={href} aria-label={label} title={label} className={`nav-item ${pathname === href || (href === "/projects" && pathname.startsWith("/projects/")) ? "selected" : ""}`} aria-current={pathname === href || (href === "/projects" && pathname.startsWith("/projects/")) ? "page" : undefined}><Icon size={18} strokeWidth={1.7} /><span>{label}</span>{label === "Today" && <span className="nav-count">{data.tasks.filter((t) => t.date === TODAY && !t.done).length}</span>}</Link>)}
             </nav>
-            <div className="nav-label project-nav-heading">YOUR PROJECTS<Button variant="ghost" size="icon-xs" aria-label="New Project" onClick={() => open({ kind: "project" })}><Plus /></Button></div>
+            <div className="nav-label project-nav-heading"><span>YOUR PROJECTS</span><Button variant="ghost" size="icon-xs" aria-label="New Project" onClick={() => open({ kind: "project" })}><Plus /></Button></div>
             <nav aria-label="Project navigation" className="project-nav">
-              {data.projects.filter((p) => !p.archived).map((p) => <Link href={`/projects/${p.id}`} key={p.id} className={`project-link ${pathname === `/projects/${p.id}` ? "current" : ""}`}><span className={`project-dot ${p.color}`} />{p.name}</Link>)}
+              {data.projects.filter((p) => !p.archived).map((p) => <Link href={`/projects/${p.id}`} key={p.id} aria-label={p.name} title={p.name} className={`project-link ${pathname === `/projects/${p.id}` ? "current" : ""}`}><span className={`project-dot ${p.color}`} /><span className="project-name">{p.name}</span></Link>)}
               {data.projects.length === 0 && <p className="sidebar-empty">Your focus areas will live here.</p>}
             </nav>
             <div className="sidebar-bottom">
-              <button className="review-button" onClick={() => setReview(true)}><SlidersHorizontal size={16} />Prototype controls<ArrowUpRight size={13} /></button>
-              <div className="profile"><span className="profile-avatar">R</span><div>Personal workspace</div></div>
+              <button aria-label="Prototype controls" title="Prototype controls" className="review-button" onClick={() => setReview(true)}><SlidersHorizontal size={16} /><span>Prototype controls</span><ArrowUpRight size={13} /></button>
+              <div className="sidebar-theme-toggle"><span>Appearance</span><ThemeToggle /></div>
+              <div className="profile" title="Personal workspace"><span className="profile-avatar">R</span><div>Personal workspace</div></div>
             </div>
           </aside>
           <div className="app-body">
@@ -111,7 +114,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             </main>
           </div>
         </div>
-        {notice && <div className="notice" role="status"><span>{notice.message}</span>{notice.undo && <Button variant="secondary" size="icon-sm" aria-label="Undo change" title="Undo change" onClick={undoNotice}><Undo2 /></Button>}<Button variant="secondary" size="icon-sm" aria-label="Dismiss notification" onClick={dismissNotice}><X /></Button></div>}
+        {notice && <div className="notice" data-sidebar-collapsed={collapsed} role="status"><span>{notice.message}</span>{notice.undo && <Button variant="secondary" size="icon-sm" aria-label="Undo change" title="Undo change" onClick={undoNotice}><Undo2 /></Button>}<Button variant="secondary" size="icon-sm" aria-label="Dismiss notification" onClick={dismissNotice}><X /></Button></div>}
         <Dialog open={!!editor} onOpenChange={(value) => { if (!value) close(); }}>
           {editor && <Editor key={`${editor.kind}-${editor.id ?? "new"}-${editor.projectId ?? ""}`} request={editor} close={close} />}
         </Dialog>

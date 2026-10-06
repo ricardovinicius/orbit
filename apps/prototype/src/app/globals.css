@@ -103,7 +103,7 @@ input[type="date"], input[type="time"] { display: block; min-width: 0; }
 .skip-link { position: fixed; top: -80px; left: 20px; z-index: 100; background: var(--card); border: 2px solid var(--primary); border-radius: 6px; padding: 12px; }
 .skip-link:focus { top: 10px; }
 .app-shell { display: flex; min-height: 100dvh; }
-.sidebar { position: fixed; inset: 0 auto 0 0; width: 222px; display: flex; flex-direction: column; background: var(--sidebar); border-right: 1px solid var(--border); padding: 30px 18px 0; z-index: 30; overflow: hidden; }
+.sidebar { position: fixed; inset: 0 auto 0 0; width: 222px; display: flex; flex-direction: column; background: var(--sidebar); border-right: 1px solid var(--border); padding: 30px 18px 0; z-index: 30; overflow: visible; }
 .sidebar > * { flex-shrink: 0; }
 .sidebar > .project-nav { flex-shrink: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
 .brand { display: flex; align-items: center; gap: 9px; padding: 0 13px; color: var(--primary); width: fit-content; }
@@ -750,3 +750,41 @@ button.heat-cell:hover, button.heat-cell.selected { outline: 2px solid var(--rin
 .calendar-column > .current-time-line, .timebox-current-row > .current-time-line { transform: translateY(-50%); }
 .timebox-current-row { position: relative; }
 .timebox-list > .current-time-line { margin-block: 12px; }
+
+/* The desktop sidebar can collapse without changing the mobile navigation. */
+.sidebar-brand-row { position: relative; }
+.sidebar-toggle { position: absolute; right: -18px; top: 50%; transform: translate(50%, -50%); }
+.sidebar-theme-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 9px; border-top: 1px solid var(--border); font-size: var(--text-small); color: var(--muted-foreground); }
+.mobile-theme-toggle { display: none; }
+@media (min-width: 761px) and (max-width: 1250px) { .sidebar-toggle { right: -12px; } }
+@media (min-width: 761px) and (max-width: 1000px) { .sidebar-toggle { right: -9px; } }
+@media (min-width: 761px) {
+  .app-shell[data-sidebar-collapsed="true"] .sidebar { width: 72px; padding-inline: 10px; }
+  .app-shell[data-sidebar-collapsed="true"] .app-body { margin-left: 72px; }
+  .app-shell[data-sidebar-collapsed="true"] .sidebar-brand-row { justify-content: center; margin-bottom: 28px; }
+  .app-shell[data-sidebar-collapsed="true"] .brand { padding: 0; }
+  .app-shell[data-sidebar-collapsed="true"] .brand > span,
+  .app-shell[data-sidebar-collapsed="true"] .sidebar-note,
+  .app-shell[data-sidebar-collapsed="true"] .nav-label:not(.project-nav-heading),
+  .app-shell[data-sidebar-collapsed="true"] .nav-item > span,
+  .app-shell[data-sidebar-collapsed="true"] .project-nav-heading > span,
+  .app-shell[data-sidebar-collapsed="true"] .project-name,
+  .app-shell[data-sidebar-collapsed="true"] .sidebar-empty,
+  .app-shell[data-sidebar-collapsed="true"] .sidebar-theme-toggle > span,
+  .app-shell[data-sidebar-collapsed="true"] .review-button > span,
+  .app-shell[data-sidebar-collapsed="true"] .review-button > svg:last-child,
+  .app-shell[data-sidebar-collapsed="true"] .profile > div { display: none; }
+  .app-shell[data-sidebar-collapsed="true"] .sidebar-toggle { right: -10px; }
+  .app-shell[data-sidebar-collapsed="true"] .sidebar-theme-toggle { justify-content: center; padding-inline: 0; }
+  .app-shell[data-sidebar-collapsed="true"] .nav-item,
+  .app-shell[data-sidebar-collapsed="true"] .project-link,
+  .app-shell[data-sidebar-collapsed="true"] .project-nav-heading,
+  .app-shell[data-sidebar-collapsed="true"] .review-button,
+  .app-shell[data-sidebar-collapsed="true"] .profile { justify-content: center; padding-inline: 0; }
+  .app-shell[data-sidebar-collapsed="true"] .project-link { min-height: 38px; }
+  .notice[data-sidebar-collapsed="true"] { left: calc(50% + 36px); }
+}
+@media (max-width: 760px) {
+  .sidebar-toggle { display: none; }
+  .mobile-theme-toggle { display: inline-flex; }
+}

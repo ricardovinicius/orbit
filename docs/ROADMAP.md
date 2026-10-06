@@ -6,8 +6,8 @@
 - [x] Increase typography for readability
 - [x] Make Timeboxes look like containers for planned Tasks
 - [x] Add Undo to mutation notifications
-- [ ] Match the favicon to the logo
-- [ ] Make sidebar shrink
+- [x] Match the favicon to the logo
+- [x] Make sidebar shrink
 - [ ] Make the session timer bar sticky
 - [ ] Improve the UI with drag-n-drop
     - [ ] dnd on week plan calendar
@@ -53,8 +53,8 @@ Implement in this order so the shared layout and typography are settled before r
    - Acceptance: Undo works once for each supported mutation, restores Session totals and Task completion dates, and cannot apply stale changes after a scenario switch. Undoing a stopped/saved Session restores its previous active state without leaving a duplicate recorded Session.
 
 5. **Match the favicon to the logo.**
-   - [ ] Add a Next.js favicon/icon asset based on the existing Orbit symbol in the sidebar, preserving its shape and stroke treatment. Use the existing vector geometry.
-   - [ ] Replace any default icon and verify the Next.js icon metadata/file convention resolves to the intended asset.
+   - [x] Add a Next.js favicon/icon asset based on the existing Orbit symbol in the sidebar, preserving its shape and stroke treatment. Use the existing vector geometry.
+   - [x] Replace any default icon and verify the Next.js icon metadata/file convention resolves to the intended asset.
    - Acceptance: the browser tab shows the Orbit symbol, recognizable at 16px and 32px against light and dark browser chrome.
 
 ### Validation and handoff
