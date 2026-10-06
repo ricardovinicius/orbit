@@ -43,7 +43,7 @@ export function TodayScreen() {
       {overdue.length > 0 && <Card className="panel attention-panel"><SectionHeading title="Overdue Tasks"><span className="overdue-label">From earlier</span></SectionHeading><TaskList tasks={overdue} showDate /></Card>}
       <Card className="panel"><SectionHeading title="Sessions"><Button variant="ghost" size="sm" onClick={() => open({ kind: "session" })}><Plus size={14} />Register Session</Button></SectionHeading><SessionList sessions={sessions} /><div className="panel-footnote"><Clock3 size={13} />Actual effort, recorded separately from your plan.</div></Card>
     </div><div className="right-column">
-      <Card className="panel schedule-panel"><SectionHeading title="Schedule"><Button variant="ghost" size="icon-sm" aria-label="Add Timebox" onClick={() => open({ kind: "timebox" })}><Plus size={16} /></Button></SectionHeading><TimeboxList boxes={boxes} /><Button asChild variant="ghost" className="panel-link"><Link href="/week">See the whole week<ArrowRight size={14} /></Link></Button></Card>
+      <Card className="panel schedule-panel"><SectionHeading title="Schedule"><Button variant="ghost" size="icon-sm" aria-label="Add Timebox" onClick={() => open({ kind: "timebox" })}><Plus size={16} /></Button></SectionHeading><TimeboxList boxes={boxes} trackCurrentTime /><Button asChild variant="ghost" className="panel-link"><Link href="/week">See the whole week<ArrowRight size={14} /></Link></Button></Card>
       <Card className="panel"><SectionHeading title="Checkpoints"><Flag size={15} className="muted" /></SectionHeading><CheckpointList checkpoints={data.checkpoints.filter((c) => c.date >= TODAY).slice(0, 3)} /></Card>
     </div></div>
   </>;

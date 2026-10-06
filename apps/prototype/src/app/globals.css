@@ -734,3 +734,11 @@ button.heat-cell:hover, button.heat-cell.selected { outline: 2px solid var(--rin
 .today-active-timer { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(38px, 6vw, 56px); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -2px; line-height: 1.15; }
 .today-active-context { margin-top: 10px; color: var(--muted-foreground); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
 .today-active-demo { margin-left: auto; color: var(--muted-foreground); font-size: 11px; }
+
+.current-time-line { display: flex; align-items: center; gap: 5px; width: 100%; color: var(--destructive); pointer-events: none; z-index: 3; }
+.current-time-label { flex-shrink: 0; font-size: 10px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; background: var(--card); border-radius: 3px; padding: 2px; }
+.current-time-rule { position: relative; flex: 1; height: 2px; background: var(--destructive); }
+.current-time-rule::before { content: ""; position: absolute; left: -3px; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: var(--destructive); }
+.calendar-column > .current-time-line, .timebox-current-row > .current-time-line { transform: translateY(-50%); }
+.timebox-current-row { position: relative; }
+.timebox-list > .current-time-line { margin-block: 12px; }

@@ -6,6 +6,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Clock3, Flag, Plus, Repeat2 } fr
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TODAY, WEEK_START, addDays, dateLabel, duration, inRange, minutes, timeLabel, type Checkpoint, type Timebox } from "@/lib/mock-data";
+import { CurrentTimeLine, useCurrentTime } from "./current-time";
 import { useWorkspace } from "./workspace";
 import { EmptyState, PageHeading, ProjectTag, SectionHeading, TaskList, TimeboxList } from "./shared";
 
@@ -53,6 +54,7 @@ function placeBoxes(boxes: Timebox[]) {
 
 export function WeekScreen() {
   const { data, open } = useWorkspace();
+  const now = useCurrentTime();
   const [week, setWeek] = useState(WEEK_START);
   const [project, setProject] = useState("all");
   const [mobileDay, setMobileDay] = useState(3);
@@ -86,6 +88,7 @@ export function WeekScreen() {
         </section>
         <div className="calendar-task-strip"><span className="task-strip-label">TASKS</span>{days.map((d) => <div key={d}>{tasks.filter((t) => t.date === d).map((t) => <button className="calendar-task" key={t.id} onClick={() => open({ kind: "task", id: t.id })}><span className={`project-dot ${data.projects.find((p) => p.id === t.projectId)?.color}`} />{t.title}</button>)}<button className="calendar-add-task" aria-label={`Add Task for ${dateLabel(d)}`} onClick={() => open({ kind: "task", date: d, projectId: project === "all" ? undefined : project })}><Plus size={11} /></button></div>)}</div>
         <div className="calendar-body" style={{ height: hours.length * 54 }}><div className="hour-labels">{hours.map((hour) => <span key={hour} style={{ top: (hour - firstHour) * 54 }}>{String(hour).padStart(2, "0")}:00</span>)}</div>{days.map((d) => <div key={d} className={`calendar-column ${d === TODAY ? "today-column" : ""}`}>
+          {d === TODAY && now && now.minutes >= firstHour * 60 && now.minutes < lastHour * 60 && <CurrentTimeLine label={now.label} top={(now.minutes - firstHour * 60) / 60 * 54} />}
           {hours.map((hour) => <button className="calendar-slot" key={hour} style={{ top: (hour - firstHour) * 54 }} aria-label={`Plan ${dateLabel(d)} at ${hour}:00`} onClick={() => open({ kind: "timebox", date: d, start: `${String(hour).padStart(2, "0")}:00`, projectId: project === "all" ? undefined : project })}><Plus size={13} /></button>)}
           {placeBoxes(boxes.filter((b) => b.date === d)).map(({ box: b, lane, columns }) => <button key={b.id} className={`calendar-block ${data.projects.find((p) => p.id === b.projectId)?.color}`} style={{ top: (minutes(b.start) - firstHour * 60) / 60 * 54, height: Math.max(duration(b) / 60 * 54 - 3, 22), left: `calc(${lane / columns * 100}% + 3px)`, width: `calc(${100 / columns}% - 6px)` }} onClick={() => open({ kind: "timebox", id: b.id })}><strong>{data.projects.find((p) => p.id === b.projectId)?.name}{b.recurrence !== "none" && <Repeat2 size={11} />}</strong><span>{b.start}–{b.end}</span>{duration(b) >= 60 && <small>{b.title}</small>}{duration(b) >= 90 && <em>Planned</em>}</button>)}
         </div>)}</div></div>
@@ -98,7 +101,7 @@ export function WeekScreen() {
               {dayCheckpoints.length ? dayCheckpoints.map((c) => <CheckpointMarker key={c.id} checkpoint={c} />) : <p>No Checkpoints due this day.</p>}
             </section>
             <TaskList tasks={tasks.filter((t) => t.date === days[mobileDay])} />
-            <TimeboxList boxes={boxes.filter((b) => b.date === days[mobileDay])} />
+            <TimeboxList boxes={boxes.filter((b) => b.date === days[mobileDay])} trackCurrentTime={days[mobileDay] === TODAY} />
           </div>
         </div>
         <div className="calendar-legend"><span><Flag size={12} />Checkpoint deadline · no time reserved</span><span><span className="legend-planned" />Timeboxes show planned time</span><span><Repeat2 size={12} />Recurring commitment</span></div>
