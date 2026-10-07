@@ -4,6 +4,8 @@ import { createContext, useContext, useRef, useState, type ReactNode } from "rea
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, Clock3, FlaskConical, FolderClosed, Orbit, PanelLeftClose, PanelLeftOpen, Play, Plus, SlidersHorizontal, Square, Sun, Undo2, X } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -101,7 +103,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
               {data.projects.length === 0 && <p className="sidebar-empty">Your focus areas will live here.</p>}
             </nav>
             <div className="sidebar-bottom">
-              <button aria-label="Prototype controls" title="Prototype controls" className="review-button" onClick={() => setReview(true)}><SlidersHorizontal size={16} /><span>Prototype controls</span><ArrowUpRight size={13} /></button>
+              <Button variant="ghost" size="sm" aria-label="Prototype controls" title="Prototype controls" className="h-auto whitespace-normal review-button" onClick={() => setReview(true)}><SlidersHorizontal size={16} /><span>Prototype controls</span><ArrowUpRight size={13} /></Button>
               <div className="sidebar-theme-toggle"><span>Appearance</span><ThemeToggle /></div>
               <div className="profile" title="Personal workspace"><span className="profile-avatar">R</span><div>Personal workspace</div></div>
             </div>
@@ -109,7 +111,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           <div className="app-body">
             {active && (pathname !== "/" || state === "loading" || state === "error") && <div className="active-banner" role="status"><div><span className="live-dot" /><strong>{activeProject?.name}</strong><span>Session in progress</span><span className="timer-readout">00:25:00</span><small>Demo timer</small></div><Button size="sm" onClick={() => open({ kind: "stop", projectId: active.projectId })}><Square size={12} fill="currentColor" />Stop & review</Button></div>}
             <main id="main-content" className="main-content">
-              {state === "loading" ? <div className="loading-state" role="status" aria-label="Loading workspace"><div className="skeleton heading-skeleton" /><div className="metrics-grid">{[0, 1, 2].map((i) => <div key={i} className="skeleton metric-skeleton" />)}</div><div className="skeleton content-skeleton" /><Button variant="outline" onClick={() => fixture("populated")}>Finish loading preview</Button></div> : state === "error" ? <div className="empty-state error-state"><CircleHelp /><h1>We couldn’t load your workspace</h1><p>Your work hasn’t changed. Try loading it again.</p><Button onClick={() => fixture("populated")}>Try again</Button></div> : children}
+              {state === "loading" ? <div className="loading-state" role="status" aria-label="Loading workspace"><Skeleton className="heading-skeleton" /><div className="metrics-grid">{[0, 1, 2].map((i) => <Skeleton key={i} className="metric-skeleton" />)}</div><Skeleton className="content-skeleton" /><Button variant="outline" onClick={() => fixture("populated")}>Finish loading preview</Button></div> : state === "error" ? <Empty className="empty-state error-state"><EmptyHeader><EmptyMedia variant="icon"><CircleHelp /></EmptyMedia><EmptyTitle><h1>We couldn’t load your workspace</h1></EmptyTitle><EmptyDescription>Your work hasn’t changed. Try loading it again.</EmptyDescription></EmptyHeader><EmptyContent><Button onClick={() => fixture("populated")}>Try again</Button></EmptyContent></Empty> : children}
               <footer className="page-footer"><span><Orbit size={13} /> A little intention goes a long way.</span><span>October 2026</span></footer>
             </main>
           </div>
@@ -118,7 +120,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         <Dialog open={!!editor} onOpenChange={(value) => { if (!value) close(); }}>
           {editor && <Editor key={`${editor.kind}-${editor.id ?? "new"}-${editor.projectId ?? ""}`} request={editor} close={close} />}
         </Dialog>
-        <Dialog open={review} onOpenChange={setReview}><DialogContent className="review-dialog"><DialogHeader><DialogTitle>Prototype controls</DialogTitle><DialogDescription>Explore the screens with prepared data. Changes last until you reload or switch a scenario.</DialogDescription></DialogHeader><div className="fixture-options">{[{ id: "populated", name: "A week in motion", text: "Projects, plans, and recorded activity", icon: CalendarDays }, { id: "active", name: "An active Session", text: "Preview the persistent Session control", icon: Play }, { id: "empty", name: "A fresh start", text: "Create your first Project and plan", icon: Plus }, { id: "loading", name: "Loading", text: "Review the loading treatment", icon: Orbit }, { id: "error", name: "Load failure", text: "Review the retry experience", icon: CircleHelp }].map(({ id, name, text, icon: Icon }) => <button key={id} onClick={() => fixture(id)} className="fixture-option"><Icon size={19} /><div><strong>{name}</strong><small>{text}</small></div><ArrowUpRight size={16} /></button>)}</div><p className="muted text-xs flex gap-2"><FlaskConical size={14} />Fixed demo date: October 1, 2026. No data is sent or saved.</p></DialogContent></Dialog>
+        <Dialog open={review} onOpenChange={setReview}><DialogContent className="review-dialog"><DialogHeader><DialogTitle>Prototype controls</DialogTitle><DialogDescription>Explore the screens with prepared data. Changes last until you reload or switch a scenario.</DialogDescription></DialogHeader><div className="fixture-options">{[{ id: "populated", name: "A week in motion", text: "Projects, plans, and recorded activity", icon: CalendarDays }, { id: "active", name: "An active Session", text: "Preview the persistent Session control", icon: Play }, { id: "empty", name: "A fresh start", text: "Create your first Project and plan", icon: Plus }, { id: "loading", name: "Loading", text: "Review the loading treatment", icon: Orbit }, { id: "error", name: "Load failure", text: "Review the retry experience", icon: CircleHelp }].map(({ id, name, text, icon: Icon }) => <Button variant="ghost" size="sm" key={id} onClick={() => fixture(id)} className="fixture-option"><Icon size={19} /><div><strong>{name}</strong><small>{text}</small></div><ArrowUpRight size={16} /></Button>)}</div><p className="muted text-xs flex gap-2"><FlaskConical size={14} />Fixed demo date: October 1, 2026. No data is sent or saved.</p></DialogContent></Dialog>
       </TooltipProvider>
     </WorkspaceContext.Provider>
   );

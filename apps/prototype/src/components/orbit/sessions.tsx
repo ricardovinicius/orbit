@@ -52,7 +52,7 @@ export function SessionsScreen() {
     open({ kind: "session", projectId: project === "all" ? undefined : project });
   }
 
-  return <>
+  return <div className="sessions-screen">
     <PageHeading title="Sessions">
       <Button variant="outline" disabled={!!active || !hasProjects} onClick={() => open({ kind: "start", projectId: project === "all" ? undefined : project })}><Play data-icon="inline-start" />{active ? "Session in progress" : "Start Session"}</Button>
       <Button onClick={hasProjects ? logSession : () => open({ kind: "project" })}><Plus data-icon="inline-start" />{hasProjects ? "Log Session" : "Create Project"}</Button>
@@ -100,11 +100,12 @@ export function SessionsScreen() {
       </Card>)}
     </div>
 
-    <section aria-labelledby="sessions-history-title">
+    <section className="sessions-history-panel" aria-labelledby="sessions-history-title">
       <div className="sessions-history-heading">
         <div><h2 id="sessions-history-title" ref={historyHeading} tabIndex={-1}>Session history</h2><p>{invalidRange ? "Choose a valid date range to see your history." : period === "all" ? "All recorded activity · newest first" : `${dateLabel(from, { month: "short", day: "numeric", year: "numeric" })} – ${dateLabel(to, { month: "short", day: "numeric", year: "numeric" })} · newest first`}</p></div>
         <span role="status" className="sessions-result-count">{invalidRange ? "Invalid date range" : `${sessions.length} ${sessions.length === 1 ? "Session" : "Sessions"}`}</span>
       </div>
+      <div className="sessions-history-scroll" role="region" aria-labelledby="sessions-history-title" tabIndex={0}>
       <div className="sessions-history">
         {days.slice(0, visibleDays).map(([date, entries]) => <section key={date} className="sessions-day" aria-labelledby={`sessions-day-${date}`}>
           <h3 id={`sessions-day-${date}`} className="sessions-day-heading">{date === TODAY ? "Today" : date === addDays(TODAY, -1) ? "Yesterday" : dateLabel(date, { month: "short", day: "numeric", year: "numeric" })}</h3>
@@ -117,7 +118,7 @@ export function SessionsScreen() {
                 <span className="sessions-timeline-icon" aria-hidden="true"><Timer size={14} /></span>
                 <div className="sessions-entry-body">
                   <div className="sessions-entry-top">
-                    <button className="sessions-detail-link" aria-label={`View Session: ${label}`} onClick={() => open({ kind: "session-detail", id: session.id })}>{session.start} – {session.end}</button>
+                    <Button variant="ghost" size="sm" className="h-auto whitespace-normal sessions-detail-link" aria-label={`View Session: ${label}`} onClick={() => open({ kind: "session-detail", id: session.id })}>{session.start} – {session.end}</Button>
                     <span className="sessions-entry-duration">{timeLabel(duration(session))}</span>
                   </div>
                   {tasks.length > 0 && <p className="sessions-task-names">{tasks.join(" · ")}</p>}
@@ -138,6 +139,7 @@ export function SessionsScreen() {
         </CardContent></Card>}
       </div>
       {days.length > visibleDays && <div className="sessions-load-more"><Button variant="outline" onClick={() => setVisibleDays((count) => count + 7)}>Show older Sessions</Button><p>Showing {visibleDays} of {days.length} days. Totals include all matching Sessions.</p></div>}
+      </div>
     </section>
 
     <AlertDialog open={!!deleting} onOpenChange={(value) => { if (!value) setDeleting(null); }}>
@@ -151,5 +153,5 @@ export function SessionsScreen() {
         }}>Delete Session</AlertDialogAction></AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  </>;
+  </div>;
 }

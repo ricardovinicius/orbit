@@ -76,18 +76,18 @@ export function CalendarTimebox({ box, lane, columns, firstHour, lastHour, dragg
       }}><span aria-hidden="true" /></Button>;
   }
 
-  return <div className={cn("calendar-block", project?.color, dragging && "is-dragging", preview && "is-resizing")}
+  return <div className={cn("calendar-block", project?.color, dragging && "is-dragging", preview && "is-resizing", duration(shown) < 60 && "is-compact", duration(shown) < 30 && "is-short")}
     style={{ top: (Math.max(minutes(shown.start), firstHour * 60) - firstHour * 60) / 60 * 54,
       height: Math.max((Math.min(minutes(shown.end), lastHour * 60) - Math.max(minutes(shown.start), firstHour * 60)) / 60 * 54 - 3, 22),
       left: `calc(${lane / columns * 100}% + 3px)`, width: `calc(${100 / columns}% - 6px)` }}>
-    <button className="calendar-block-content" draggable={!preview} onDragStart={onDragStart} aria-describedby="week-drag-help"
+    <Button variant="ghost" size="sm" className="h-auto whitespace-normal calendar-block-content" draggable={!preview} onDragStart={onDragStart} aria-describedby="week-drag-help"
       aria-label={`${box.title}, planned time ${shown.start}–${shown.end}. ${box.taskIds.map((id) => data.tasks.find((t) => t.id === id)?.title).filter(Boolean).join(", ") || "Project time"}`}
       onClick={() => { if (!suppressClick.current) onOpen(); }}>
       <strong><span>{project?.name}</span>{box.recurrence !== "none" && <Repeat2 size={11} />}</strong>
-      <span>{shown.start}–{shown.end} · {preview ? "Resizing" : "Planned"}</span>
+      <span>{shown.start}–{shown.end}{duration(shown) >= 60 && <> · {preview ? "Resizing" : "Planned"}</>}</span>
       {duration(shown) >= 60 && <small>{duration(shown) < 90 ? box.taskIds.length ? `${box.taskIds.length} planned ${box.taskIds.length === 1 ? "Task" : "Tasks"}` : "Project time" : box.title}</small>}
       {duration(shown) >= 90 && <PlannedTasks box={box} compact />}
-    </button>
+    </Button>
     {minutes(box.start) >= firstHour * 60 && handle("start")}
     {handle("end")}
     <span className="sr-only" role="status">{preview ? `${shown.start} to ${shown.end}` : ""}</span>
