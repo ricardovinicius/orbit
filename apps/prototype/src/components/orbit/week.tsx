@@ -1,14 +1,19 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type DragEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, Flag, Plus, Repeat2 } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Flag, GripVertical, PanelRight, Plus, Repeat2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Card } from "@/components/ui/card";
 import { TODAY, WEEK_START, addDays, dateLabel, duration, inRange, minutes, timeLabel, type Checkpoint, type Timebox } from "@/lib/mock-data";
+import { movedTimeRange } from "@/lib/planning";
+import { cn } from "@/lib/utils";
+import { CalendarTimebox } from "./calendar-timebox";
 import { CurrentTimeLine, useCurrentTime } from "./current-time";
 import { useWorkspace } from "./workspace";
-import { EmptyState, PageHeading, PlannedTasks, ProjectTag, SectionHeading, TaskList, TimeboxList } from "./shared";
+import { EmptyState, PageHeading, ProjectTag, SectionHeading, TaskList, TimeboxList } from "./shared";
 
 function CheckpointMarker({ checkpoint }: { checkpoint: Checkpoint }) {
   const { data, open } = useWorkspace();
@@ -53,7 +58,69 @@ function placeBoxes(boxes: Timebox[]) {
 }
 
 export function WeekScreen() {
-  const { data, open } = useWorkspace();
+  const { data, setData, open, notify, undoFor } = useWorkspace();
+  const [dragged, setDragged] = useState<{ kind: "task" | "timebox"; id: string } | null>(null);
+  const [planningOpen, setPlanningOpen] = useState(false);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const dragRef = useRef<typeof dragged>(null);
+  const suppressClick = useRef(false);
+  function resetDrag() {
+    dragRef.current = null;
+    setDragged(null);
+    setDropTarget(null);
+    // Browsers may synthesize a click after dropping.
+    setTimeout(() => { suppressClick.current = false; }, 0);
+  }
+  function startDrag(event: DragEvent, kind: "task" | "timebox", id: string) {
+    dragRef.current = { kind, id };
+    setDragged({ kind, id });
+    suppressClick.current = true;
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("application/x-orbit-plan", JSON.stringify({ kind, id }));
+  }
+  function targetProps(date: string, hour?: number) {
+    const key = hour === undefined ? date : `${date}-${hour}`;
+    const accepts = !!dragged && (dragged.kind === "task" ? hour === undefined : hour !== undefined);
+    return {
+      "data-drop-active": accepts && dropTarget === key,
+      "data-drop-available": accepts,
+      onDragOver: (event: DragEvent) => {
+        const item = dragRef.current;
+        if (!item || (item.kind === "task" ? hour !== undefined : hour === undefined)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        setDropTarget(key);
+      },
+      onDragLeave: (event: DragEvent) => {
+        if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setDropTarget((current) => current === key ? null : current);
+      },
+      onDrop: (event: DragEvent) => {
+        const item = dragRef.current;
+        if (!item || (item.kind === "task" ? hour !== undefined : hour === undefined)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (item.kind === "task") {
+          const task = data.tasks.find((t) => t.id === item.id);
+          if (task && task.date !== date) {
+            const undo = undoFor("tasks", [task.id]);
+            setData((current) => ({ ...current, tasks: current.tasks.map((t) => t.id === task.id ? { ...t, date } : t) }));
+            notify(`${task.title}: ${date ? dateLabel(date) : "Unscheduled"}.`, undo);
+          }
+        } else {
+          const box = data.timeboxes.find((b) => b.id === item.id);
+          if (box && hour !== undefined) {
+            const { start, end } = movedTimeRange(box.start, box.end, hour);
+            if (box.date !== date || box.start !== start) {
+              const undo = undoFor("timeboxes", [box.id]);
+              setData((current) => ({ ...current, timeboxes: current.timeboxes.map((b) => b.id === box.id ? { ...b, date, start, end } : b) }));
+              notify(`${box.title}: ${dateLabel(date)}, ${start}–${end}. Only this occurrence moved.`, undo);
+            }
+          }
+        }
+        resetDrag();
+      },
+    };
+  }
   const now = useCurrentTime();
   const [week, setWeek] = useState(WEEK_START);
   const [project, setProject] = useState("all");
@@ -85,11 +152,12 @@ export function WeekScreen() {
   }, [todayScrollRequest, firstHour]);
 
   const planned = boxes.reduce((n, b) => n + duration(b), 0);
-  return <div className="week-screen">
+  return <Sheet open={planningOpen} onOpenChange={setPlanningOpen} modal={false}><div className="week-screen" data-planning-open={planningOpen} onDragEnd={resetDrag}>
     <PageHeading title="Week">
       <div className="week-toolbar"><div className="week-navigation"><div className="arrow-group"><Button variant="ghost" size="icon-sm" aria-label="Previous week" onClick={() => setWeek(addDays(week, -7))}><ChevronLeft /></Button><Button variant="ghost" size="icon-sm" aria-label="Next week" onClick={() => setWeek(addDays(week, 7))}><ChevronRight /></Button></div><h2>{dateLabel(week)} – {dateLabel(addDays(week, 6))}, 2026</h2><Button variant="outline" size="sm" onClick={() => { setWeek(WEEK_START); setMobileDay(3); setTodayScrollRequest((request) => request + 1); }}>Today</Button></div><select aria-label="Filter calendar by Project" className="compact-select" value={project} onChange={(e) => setProject(e.target.value)}><option value="all">All Projects</option>{data.projects.map((p) => <option value={p.id} key={p.id}>{p.name}</option>)}</select></div>
       <Button onClick={() => open({ kind: "timebox", date: days[mobileDay], projectId: project === "all" ? undefined : project })}><Plus size={16} />Add Timebox</Button>
     </PageHeading>
+    <p className="drag-instructions" id="week-drag-help"><GripVertical size={14} aria-hidden="true" />Drag Tasks to a day or Unscheduled. Drag Timeboxes to an hour; drag their edges to resize. Click to edit.</p>
     <div className="week-layout"><div>
       <Card className="calendar-panel"><div className="calendar-desktop"><div className="calendar-head"><div className="calendar-timezone">LOCAL</div>{days.map((d) => <div className={`calendar-day ${d === TODAY ? "is-today" : ""}`} key={d}><span>{dateLabel(d, { weekday: "short" })}</span><strong>{Number(d.slice(-2))}</strong>{d === TODAY && <small>Today</small>}</div>)}</div>
         <section className="calendar-checkpoint-strip" aria-label="Checkpoint deadlines">
@@ -103,11 +171,11 @@ export function WeekScreen() {
             );
           })}
         </section>
-        <div className="calendar-task-strip"><span className="task-strip-label">TASKS</span>{days.map((d) => <div key={d}>{tasks.filter((t) => t.date === d).map((t) => <button className="calendar-task" key={t.id} onClick={() => open({ kind: "task", id: t.id })}><span className={`project-dot ${data.projects.find((p) => p.id === t.projectId)?.color}`} />{t.title}</button>)}<button className="calendar-add-task" aria-label={`Add Task for ${dateLabel(d)}`} onClick={() => open({ kind: "task", date: d, projectId: project === "all" ? undefined : project })}><Plus size={11} /></button></div>)}</div>
+        <div className="calendar-task-strip"><span className="task-strip-label">TASKS</span>{days.map((d) => <div key={d} {...targetProps(d)} aria-label={`Tasks for ${dateLabel(d)}`}>{tasks.filter((t) => t.date === d).map((t) => <button className={cn("calendar-task", dragged?.id === t.id && "is-dragging")} key={t.id} draggable onDragStart={(e) => startDrag(e, "task", t.id)} aria-describedby="week-drag-help" onClick={() => { if (!suppressClick.current) open({ kind: "task", id: t.id }); }}><span className={`project-dot ${data.projects.find((p) => p.id === t.projectId)?.color}`} />{t.title}</button>)}<button className="calendar-add-task" aria-label={`Add Task for ${dateLabel(d)}`} onClick={() => open({ kind: "task", date: d, projectId: project === "all" ? undefined : project })}><Plus size={11} /></button></div>)}</div>
         <div ref={calendarScrollRef} className="calendar-time-scroll" role="region" aria-label="Calendar hours from 12pm to 11pm" tabIndex={0}><div className="calendar-body" style={{ height: hours.length * 54 }}><div className="hour-labels">{hours.map((hour) => <span key={hour} style={{ top: (hour - firstHour) * 54 }}>{String(hour).padStart(2, "0")}:00</span>)}</div>{days.map((d) => <div key={d} className={`calendar-column ${d === TODAY ? "today-column" : ""}`}>
           {d === TODAY && now && now.minutes >= firstHour * 60 && now.minutes < lastHour * 60 && <CurrentTimeLine label={now.label} top={(now.minutes - firstHour * 60) / 60 * 54} />}
-          {hours.map((hour) => <button className="calendar-slot" key={hour} style={{ top: (hour - firstHour) * 54 }} aria-label={`Plan ${dateLabel(d)} at ${hour}:00`} onClick={() => open({ kind: "timebox", date: d, start: `${String(hour).padStart(2, "0")}:00`, projectId: project === "all" ? undefined : project })}><Plus size={13} /></button>)}
-          {placeBoxes(boxes.filter((b) => b.date === d && minutes(b.end) > firstHour * 60 && minutes(b.start) < lastHour * 60)).map(({ box: b, lane, columns }) => <button key={b.id} className={`calendar-block ${data.projects.find((p) => p.id === b.projectId)?.color}`} style={{ top: (Math.max(minutes(b.start), firstHour * 60) - firstHour * 60) / 60 * 54, height: Math.max((Math.min(minutes(b.end), lastHour * 60) - Math.max(minutes(b.start), firstHour * 60)) / 60 * 54 - 3, 22), left: `calc(${lane / columns * 100}% + 3px)`, width: `calc(${100 / columns}% - 6px)` }} aria-label={`${b.title}, planned time ${b.start}–${b.end}. ${b.taskIds.map((id) => data.tasks.find((t) => t.id === id)?.title).filter(Boolean).join(", ") || "Project time"}`} onClick={() => open({ kind: "timebox", id: b.id })}><strong><span>{data.projects.find((p) => p.id === b.projectId)?.name}</span>{b.recurrence !== "none" && <Repeat2 size={11} />}</strong><span>{b.start}–{b.end} · Planned</span>{duration(b) >= 60 && <small>{duration(b) < 90 ? b.taskIds.length ? `${b.taskIds.length} planned ${b.taskIds.length === 1 ? "Task" : "Tasks"}` : "Project time" : b.title}</small>}{duration(b) >= 90 && <PlannedTasks box={b} compact />}</button>)}
+          {hours.map((hour) => <button {...targetProps(d, hour)} className="calendar-slot" key={hour} style={{ top: (hour - firstHour) * 54 }} aria-label={`Plan ${dateLabel(d)} at ${hour}:00`} onClick={() => open({ kind: "timebox", date: d, start: `${String(hour).padStart(2, "0")}:00`, projectId: project === "all" ? undefined : project })}><Plus size={13} /></button>)}
+          {placeBoxes(boxes.filter((b) => b.date === d && minutes(b.end) > firstHour * 60 && minutes(b.start) < lastHour * 60)).map(({ box: b, lane, columns }) => <CalendarTimebox key={b.id} box={b} lane={lane} columns={columns} firstHour={firstHour} lastHour={lastHour} dragging={dragged?.id === b.id} onDragStart={(e) => startDrag(e, "timebox", b.id)} onOpen={() => { if (!suppressClick.current) open({ kind: "timebox", id: b.id }); }} />)}
         </div>)}</div></div></div>
         <div className="calendar-mobile">
           <div className="mobile-day-picker">{days.map((d, i) => <button key={d} className={i === mobileDay ? "selected" : ""} aria-pressed={i === mobileDay} onClick={() => setMobileDay(i)}><span>{dateLabel(d, { weekday: "short" })}</span><strong>{Number(d.slice(-2))}</strong></button>)}</div>
@@ -121,11 +189,15 @@ export function WeekScreen() {
             <TimeboxList boxes={boxes.filter((b) => b.date === days[mobileDay])} trackCurrentTime={days[mobileDay] === TODAY} />
           </div>
         </div>
-        <div className="calendar-legend"><span><Flag size={12} />Checkpoint deadline · no time reserved</span><span><span className="legend-planned" />Timeboxes show planned time</span><span><Repeat2 size={12} />Recurring commitment</span></div>
+        <div className="calendar-legend"><span><Flag size={12} />Checkpoint deadline · no time reserved</span><span><span className="legend-planned" />Timeboxes show planned time</span><span><Repeat2 size={12} />Recurring commitment</span><SheetTrigger asChild><Button variant="outline" size="sm" className="calendar-planning-trigger" onDragOver={(event) => { if (dragRef.current?.kind === "task") { event.preventDefault(); setPlanningOpen(true); } }}><PanelRight data-icon="inline-start" />Planning<Badge variant="secondary">{unscheduled.length}</Badge></Button></SheetTrigger></div>
       </Card>
-    </div><div className="week-side">
-      <Card className="panel"><SectionHeading title="Unscheduled Tasks" count={unscheduled.length}><Button variant="ghost" size="icon-xs" aria-label="Add unscheduled Task" onClick={() => open({ kind: "task", date: "", projectId: project === "all" ? undefined : project })}><Plus /></Button></SectionHeading><div className="unscheduled-list">{unscheduled.map((t) => <div className="unscheduled-task" key={t.id}><ProjectTag id={t.projectId} /><strong>{t.title}</strong><Button variant="ghost" size="sm" onClick={() => open({ kind: "task", id: t.id })}>Assign day<ArrowRight size={13} /></Button></div>)}{!unscheduled.length && <EmptyState compact title="Everything has a place" description="Unscheduled Tasks will appear here." />}</div></Card>
-      <Card className="panel week-summary"><span className="eyebrow">PLANNED TIME</span><div className="week-total">{timeLabel(planned)}<small>planned</small></div><div className="allocation-list">{data.projects.filter((p) => boxes.some((b) => b.projectId === p.id)).map((p) => { const amount = boxes.filter((b) => b.projectId === p.id).reduce((n, b) => n + duration(b), 0); return <div key={p.id}><div><ProjectTag id={p.id} /><span>{timeLabel(amount)}</span></div><div className="allocation-track"><span className={p.color} style={{ width: `${planned ? amount / planned * 100 : 0}%` }} /></div></div>; })}</div><Button asChild variant="ghost"><Link href="/progress">Review actual time<ArrowRight size={14} /></Link></Button></Card>
     </div></div>
-  </div>;
+    <SheetContent side="right" className="week-planning-drawer" onInteractOutside={(event) => event.preventDefault()} onDragEnd={resetDrag}>
+      <SheetHeader><SheetTitle>Week planning</SheetTitle><SheetDescription>{dateLabel(week)} – {dateLabel(addDays(week, 6))} · {project === "all" ? "All Projects" : data.projects.find((p) => p.id === project)?.name}</SheetDescription></SheetHeader>
+      <div className="week-side week-planning-content">
+      <p className="planning-drawer-hint">Drag a Task onto a calendar day, or use Assign day.</p>
+      <Card className="panel"><SectionHeading title="Unscheduled Tasks" count={unscheduled.length}><Button variant="ghost" size="icon-xs" aria-label="Add unscheduled Task" onClick={() => open({ kind: "task", date: "", projectId: project === "all" ? undefined : project })}><Plus /></Button></SectionHeading><div className="unscheduled-list" {...targetProps("")} aria-label="Unscheduled Tasks">{unscheduled.map((t) => <div className={cn("unscheduled-task", dragged?.id === t.id && "is-dragging")} key={t.id}><div className="unscheduled-task-heading"><Button variant="ghost" size="icon-xs" className="task-drag-handle" draggable onDragStart={(e) => startDrag(e, "task", t.id)} aria-label={`Drag ${t.title} to a day; click to assign day`} aria-describedby="week-drag-help" onClick={() => { if (!suppressClick.current) open({ kind: "task", id: t.id }); }}><GripVertical /></Button><ProjectTag id={t.projectId} /></div><strong>{t.title}</strong><Button variant="ghost" size="sm" onClick={() => open({ kind: "task", id: t.id })}>Assign day<ArrowRight size={13} /></Button></div>)}{!unscheduled.length && <EmptyState compact title="Everything has a place" description="Unscheduled Tasks will appear here." />}</div></Card>
+      <Card className="panel week-summary"><span className="eyebrow">PLANNED TIME</span><div className="week-total">{timeLabel(planned)}<small>planned</small></div><div className="allocation-list">{data.projects.filter((p) => boxes.some((b) => b.projectId === p.id)).map((p) => { const amount = boxes.filter((b) => b.projectId === p.id).reduce((n, b) => n + duration(b), 0); return <div key={p.id}><div><ProjectTag id={p.id} /><span>{timeLabel(amount)}</span></div><div className="allocation-track"><span className={p.color} style={{ width: `${planned ? amount / planned * 100 : 0}%` }} /></div></div>; })}</div><Button asChild variant="ghost"><Link href="/progress">Review actual time<ArrowRight size={14} /></Link></Button></Card>
+    </div></SheetContent>
+  </div></Sheet>;
 }
