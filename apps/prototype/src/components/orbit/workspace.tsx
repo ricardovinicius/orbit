@@ -3,7 +3,9 @@
 import { createContext, useContext, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, Clock3, FlaskConical, FolderClosed, Orbit, PanelLeftClose, PanelLeftOpen, Play, Plus, SlidersHorizontal, Square, Sun, Undo2, X } from "lucide-react";
+import { ArrowUpRight, BarChart3, CalendarDays, CircleHelp, Clock3, FlaskConical, FolderClosed, Orbit, PanelLeftClose, PanelLeftOpen, Play, Plus, SlidersHorizontal, Square, Sun, Undo2 } from "lucide-react";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
@@ -43,8 +45,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<Dataset>(initialData);
   const [active, setActive] = useState<ActiveSession | null>(null);
   const [editor, setEditor] = useState<EditorRequest | null>(null);
-  const [notice, setNotice] = useState<{ message: string; undo?: () => void } | null>(null);
-  const noticeRef = useRef<typeof notice>(null);
+  const noticeId = useRef<string | number | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [review, setReview] = useState(false);
   const [state, setState] = useState("populated");
@@ -55,18 +56,30 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setEditor(request);
   }
   function close() { setEditor(null); requestAnimationFrame(() => trigger.current?.focus()); }
-  function notify(message: string, undo?: () => void) {
-    const next = { message, undo };
-    noticeRef.current = next;
-    setNotice(next);
+  function dismissNotice() {
+    if (noticeId.current !== null) toast.dismiss(noticeId.current);
+    noticeId.current = null;
   }
-  function dismissNotice() { noticeRef.current = null; setNotice(null); }
-  function undoNotice() {
-    const current = noticeRef.current;
-    if (!current?.undo) return;
-    noticeRef.current = null;
-    current.undo();
-    notify("Change undone.");
+  function notify(message: string, undo?: () => void) {
+    dismissNotice();
+    noticeId.current = toast.success(message, {
+      duration: undo ? 8000 : 5000,
+      action: undo ? (
+        <Button
+          variant="secondary"
+          size="icon-sm"
+          className="ml-auto"
+          aria-label="Undo change"
+          title="Undo change"
+          onClick={() => {
+            undo();
+            notify("Change undone.");
+          }}
+        >
+          <Undo2 aria-hidden="true" />
+        </Button>
+      ) : undefined,
+    });
   }
   function undoFor(collection?: keyof Dataset, ids: string[] = [], restoreActive = false) {
     const previousActive = active;
@@ -116,7 +129,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             </main>
           </div>
         </div>
-        {notice && <div className="notice" data-sidebar-collapsed={collapsed} role="status"><span>{notice.message}</span>{notice.undo && <Button variant="secondary" size="icon-sm" aria-label="Undo change" title="Undo change" onClick={undoNotice}><Undo2 /></Button>}<Button variant="secondary" size="icon-sm" aria-label="Dismiss notification" onClick={dismissNotice}><X /></Button></div>}
+        <Toaster />
         <Dialog open={!!editor} onOpenChange={(value) => { if (!value) close(); }}>
           {editor && <Editor key={`${editor.kind}-${editor.id ?? "new"}-${editor.projectId ?? ""}`} request={editor} close={close} />}
         </Dialog>
