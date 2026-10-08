@@ -4,6 +4,7 @@ import { useRef, useState, type DragEvent, type PointerEvent } from "react";
 import { Repeat2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { duration, minutes, type Timebox } from "@/lib/mock-data";
+import { clockLabel } from "@/lib/clock";
 import { resizedTimeRange } from "@/lib/planning";
 import { cn } from "@/lib/utils";
 import { PlannedTasks } from "./shared";
@@ -46,7 +47,7 @@ export function CalendarTimebox({ box, lane, columns, firstHour, lastHour, dragg
     setPreview(null);
     if (next && (next.start !== current.original.start || next.end !== current.original.end)) {
       setData((dataset) => ({ ...dataset, timeboxes: dataset.timeboxes.map((b) => b.id === box.id ? { ...b, ...next } : b) }));
-      notify(`${box.title}: ${next.start}–${next.end}. Only this occurrence resized.`, current.undo);
+      notify(`${box.title}: ${clockLabel(next.start)}–${clockLabel(next.end)}. Only this occurrence resized.`, current.undo);
     }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     setTimeout(() => { suppressClick.current = false; }, 0);
@@ -56,11 +57,11 @@ export function CalendarTimebox({ box, lane, columns, firstHour, lastHour, dragg
     if (next.start === box.start && next.end === box.end) return;
     const undo = undoFor("timeboxes", [box.id]);
     setData((dataset) => ({ ...dataset, timeboxes: dataset.timeboxes.map((b) => b.id === box.id ? { ...b, ...next } : b) }));
-    notify(`${box.title}: ${next.start}–${next.end}. Only this occurrence resized.`, undo);
+    notify(`${box.title}: ${clockLabel(next.start)}–${clockLabel(next.end)}. Only this occurrence resized.`, undo);
   }
   function handle(edge: Edge) {
     return <Button variant="ghost" className={cn("timebox-resize-handle", `resize-${edge}`)}
-      aria-label={`Resize ${edge} of ${box.title}, ${shown[edge]}. Use Up and Down arrows to adjust by 15 minutes.`}
+      aria-label={`Resize ${edge} of ${box.title}, ${clockLabel(shown[edge])}. Use Up and Down arrows to adjust by 15 minutes.`}
       onPointerDown={(event) => begin(event, edge)}
       onPointerMove={(event) => { const next = range(event); if (next) setPreview(next); }}
       onPointerUp={(event) => finish(event)}
@@ -81,15 +82,15 @@ export function CalendarTimebox({ box, lane, columns, firstHour, lastHour, dragg
       height: Math.max((Math.min(minutes(shown.end), lastHour * 60) - Math.max(minutes(shown.start), firstHour * 60)) / 60 * 54 - 3, 22),
       left: `calc(${lane / columns * 100}% + 3px)`, width: `calc(${100 / columns}% - 6px)` }}>
     <Button variant="ghost" size="sm" className="h-auto whitespace-normal calendar-block-content" draggable={!preview} onDragStart={onDragStart} aria-describedby="week-drag-help"
-      aria-label={`${box.title}, planned time ${shown.start}–${shown.end}. ${box.taskIds.map((id) => data.tasks.find((t) => t.id === id)?.title).filter(Boolean).join(", ") || "Project time"}`}
+      aria-label={`${box.title}, planned time ${clockLabel(shown.start)}–${clockLabel(shown.end)}. ${box.taskIds.map((id) => data.tasks.find((t) => t.id === id)?.title).filter(Boolean).join(", ") || "Project time"}`}
       onClick={() => { if (!suppressClick.current) onOpen(); }}>
       <strong><span>{project?.name}</span>{box.recurrence !== "none" && <Repeat2 size={11} />}</strong>
-      <span>{shown.start}–{shown.end}{duration(shown) >= 60 && <> · {preview ? "Resizing" : "Planned"}</>}</span>
+      <span>{clockLabel(shown.start)}–{clockLabel(shown.end)}{duration(shown) >= 60 && <> · {preview ? "Resizing" : "Planned"}</>}</span>
       {duration(shown) >= 60 && <small>{duration(shown) < 90 ? box.taskIds.length ? `${box.taskIds.length} planned ${box.taskIds.length === 1 ? "Task" : "Tasks"}` : "Project time" : box.title}</small>}
       {duration(shown) >= 90 && <PlannedTasks box={box} compact />}
     </Button>
     {minutes(box.start) >= firstHour * 60 && handle("start")}
     {handle("end")}
-    <span className="sr-only" role="status">{preview ? `${shown.start} to ${shown.end}` : ""}</span>
+    <span className="sr-only" role="status">{preview ? `${clockLabel(shown.start)} to ${clockLabel(shown.end)}` : ""}</span>
   </div>;
 }

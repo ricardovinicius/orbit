@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { clockLabel } from "@/lib/clock";
 import { TODAY, dateLabel, duration, minutes, timeLabel, type Checkpoint, type Session, type Task, type Timebox } from "@/lib/mock-data";
 import { CurrentTimeLine, useCurrentTime } from "./current-time";
 import { useWorkspace } from "./workspace";
@@ -61,11 +62,11 @@ export function TimeboxList({ boxes, trackCurrentTime = false }: { boxes: Timebo
   const current = trackCurrentTime ? now : null;
   const sorted = [...boxes].sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`));
   const markerIndex = current ? sorted.findIndex((b) => minutes(b.end) > current.minutes) : -1;
-  if (!boxes.length) return <>{current && <div className="timebox-list"><CurrentTimeLine label={current.label} /></div>}<EmptyState compact title="An open schedule" description="Reserve a little time for a Project that matters." /></>;
+  if (!boxes.length) return <>{current && <div className="timebox-list"><CurrentTimeLine label={clockLabel(current.label)} /></div>}<EmptyState compact title="An open schedule" description="Reserve a little time for a Project that matters." /></>;
   return <div className="timebox-list">{sorted.map((b, index) => {
     const p = data.projects.find((p) => p.id === b.projectId);
-    return <div key={b.id} className="timebox-current-row">{current && index === markerIndex && <CurrentTimeLine label={current.label} top={current.minutes > minutes(b.start) ? `${(current.minutes - minutes(b.start)) / duration(b) * 100}%` : 0} />}<div className="timebox-row"><div className="timebox-time"><strong>{b.start}</strong><span>{b.end}</span>{b.date !== TODAY && <small>{dateLabel(b.date)}</small>}</div><Button variant="ghost" size="sm" className={`h-auto whitespace-normal timebox-card ${p?.color}`} onClick={() => open({ kind: "timebox", id: b.id })}><div><strong>{p?.name}</strong><span>{timeLabel(duration(b))}{b.recurrence !== "none" && <Repeat2 size={12} />}</span></div><p>{b.title}</p><PlannedTasks box={b} /><small><span>Planned time</span></small></Button></div></div>;
-  })}{current && markerIndex === -1 && <CurrentTimeLine label={current.label} />}</div>;
+    return <div key={b.id} className="timebox-current-row">{current && index === markerIndex && <CurrentTimeLine label={clockLabel(current.label)} top={current.minutes > minutes(b.start) ? `${(current.minutes - minutes(b.start)) / duration(b) * 100}%` : 0} />}<div className="timebox-row"><div className="timebox-time"><strong>{clockLabel(b.start)}</strong><span>{clockLabel(b.end)}</span>{b.date !== TODAY && <small>{dateLabel(b.date)}</small>}</div><Button variant="ghost" size="sm" className={`h-auto whitespace-normal timebox-card ${p?.color}`} onClick={() => open({ kind: "timebox", id: b.id })}><div><strong>{p?.name}</strong><span>{timeLabel(duration(b))}{b.recurrence !== "none" && <Repeat2 size={12} />}</span></div><p>{b.title}</p><PlannedTasks box={b} /><small><span>Planned time</span></small></Button></div></div>;
+  })}{current && markerIndex === -1 && <CurrentTimeLine label={clockLabel(current.label)} />}</div>;
 }
 
 export function AddTaskButton({ projectId, date = TODAY }: { projectId?: string; date?: string }) { const { open } = useWorkspace(); return <Button variant="outline" onClick={() => open({ kind: "task", projectId, date })}><Plus size={15} />Add Task</Button>; }

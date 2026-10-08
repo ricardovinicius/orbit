@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Card } from "@/components/ui/card";
 import { TODAY, WEEK_START, addDays, dateLabel, duration, inRange, minutes, timeLabel, type Checkpoint, type Timebox } from "@/lib/mock-data";
+import { clockLabel } from "@/lib/clock";
 import { movedTimeRange } from "@/lib/planning";
 import { cn } from "@/lib/utils";
 import { CalendarTimebox } from "./calendar-timebox";
@@ -115,7 +116,7 @@ export function WeekScreen() {
             if (box.date !== date || box.start !== start) {
               const undo = undoFor("timeboxes", [box.id]);
               setData((current) => ({ ...current, timeboxes: current.timeboxes.map((b) => b.id === box.id ? { ...b, date, start, end } : b) }));
-              notify(`${box.title}: ${dateLabel(date)}, ${start}–${end}. Only this occurrence moved.`, undo);
+              notify(`${box.title}: ${dateLabel(date)}, ${clockLabel(start)}–${clockLabel(end)}. Only this occurrence moved.`, undo);
             }
           }
         }
@@ -137,13 +138,16 @@ export function WeekScreen() {
   const dayCheckpoints = checkpoints.filter((c) => c.date === days[mobileDay]);
   const tasks = data.tasks.filter((t) => !t.done && (project === "all" || t.projectId === project));
   const unscheduled = tasks.filter((t) => !t.date);
-  const firstHour = 12;
+  const firstHour = 0;
   const lastHour = 24;
   const hours = Array.from({ length: lastHour - firstHour }, (_, i) => i + firstHour);
   useLayoutEffect(() => {
-    if (!todayScrollRequest) return;
     const viewport = calendarScrollRef.current;
     if (!viewport || !viewport.clientHeight) return;
+    if (!todayScrollRequest) {
+      viewport.scrollTop = 8 * 54;
+      return;
+    }
     const current = new Date();
     const currentMinutes = current.getHours() * 60 + current.getMinutes();
     const lineTop = (currentMinutes - firstHour * 60) / 60 * 54;
@@ -174,9 +178,9 @@ export function WeekScreen() {
           })}
         </section>
         <div className="calendar-task-strip"><span className="task-strip-label">TASKS</span>{days.map((d) => <div key={d} {...targetProps(d)} aria-label={`Tasks for ${dateLabel(d)}`}>{tasks.filter((t) => t.date === d).map((t) => <Button variant="ghost" size="sm" className={cn("h-auto whitespace-normal calendar-task", dragged?.id === t.id && "is-dragging")} key={t.id} title={t.title} draggable onDragStart={(e) => startDrag(e, "task", t.id)} aria-describedby="week-drag-help" onClick={() => { if (!suppressClick.current) open({ kind: "task", id: t.id }); }}><span className={`project-dot ${data.projects.find((p) => p.id === t.projectId)?.color}`} /><span className="calendar-task-title">{t.title}</span></Button>)}<Button variant="ghost" size="sm" className="h-auto whitespace-normal calendar-add-task" aria-label={`Add Task for ${dateLabel(d)}`} onClick={() => open({ kind: "task", date: d, projectId: project === "all" ? undefined : project })}><Plus size={11} /></Button></div>)}</div>
-        <div ref={calendarScrollRef} className="calendar-time-scroll" role="region" aria-label="Calendar hours from 12pm to 11pm" tabIndex={0}><div className="calendar-body" style={{ height: hours.length * 54 }}><div className="hour-labels">{hours.map((hour) => <span key={hour} style={{ top: (hour - firstHour) * 54 }}>{String(hour).padStart(2, "0")}:00</span>)}</div>{days.map((d) => <div key={d} className={`calendar-column ${d === TODAY ? "today-column" : ""}`}>
-          {d === TODAY && now && now.minutes >= firstHour * 60 && now.minutes < lastHour * 60 && <CurrentTimeLine label={now.label} top={(now.minutes - firstHour * 60) / 60 * 54} />}
-          {hours.map((hour) => <Button variant="ghost" size="sm" {...targetProps(d, hour)} className="h-auto whitespace-normal calendar-slot" key={hour} style={{ top: (hour - firstHour) * 54 }} aria-label={`Plan ${dateLabel(d)} at ${hour}:00`} onClick={() => open({ kind: "timebox", date: d, start: `${String(hour).padStart(2, "0")}:00`, projectId: project === "all" ? undefined : project })}><Plus size={13} /></Button>)}
+        <div ref={calendarScrollRef} className="calendar-time-scroll" role="region" aria-label="Full-day calendar, 12 AM through 11 PM" tabIndex={0}><div className="calendar-body" style={{ height: hours.length * 54 }}><div className="hour-labels">{hours.map((hour) => <span key={hour} style={{ top: (hour - firstHour) * 54 }}>{clockLabel(`${hour}:00`)}</span>)}</div>{days.map((d) => <div key={d} className={`calendar-column ${d === TODAY ? "today-column" : ""}`}>
+          {d === TODAY && now && now.minutes >= firstHour * 60 && now.minutes < lastHour * 60 && <CurrentTimeLine label={clockLabel(now.label)} top={(now.minutes - firstHour * 60) / 60 * 54} />}
+          {hours.map((hour) => <Button variant="ghost" size="sm" {...targetProps(d, hour)} className="h-auto whitespace-normal calendar-slot" key={hour} style={{ top: (hour - firstHour) * 54 }} aria-label={`Plan ${dateLabel(d)} at ${clockLabel(`${hour}:00`)}`} onClick={() => open({ kind: "timebox", date: d, start: `${String(hour).padStart(2, "0")}:00`, projectId: project === "all" ? undefined : project })}><Plus size={13} /></Button>)}
           {placeBoxes(boxes.filter((b) => b.date === d && minutes(b.end) > firstHour * 60 && minutes(b.start) < lastHour * 60)).map(({ box: b, lane, columns }) => <CalendarTimebox key={b.id} box={b} lane={lane} columns={columns} firstHour={firstHour} lastHour={lastHour} dragging={dragged?.id === b.id} onDragStart={(e) => startDrag(e, "timebox", b.id)} onOpen={() => { if (!suppressClick.current) open({ kind: "timebox", id: b.id }); }} />)}
         </div>)}</div></div></div>
         <div className="calendar-mobile">

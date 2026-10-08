@@ -193,7 +193,7 @@ a.project-tag:hover { color: var(--foreground); }
 .overdue-label { font-size: var(--text-caption); color: var(--warning); }
 .timebox-list { padding: 0 22px; }
 .timebox-row { display: flex; gap: 12px; margin-bottom: 12px; }
-.timebox-time { display: flex; flex-direction: column; gap: 3px; min-width: 36px; text-align: right; padding-top: 7px; font-variant-numeric: tabular-nums; }
+.timebox-time { display: flex; flex-shrink: 0; flex-direction: column; gap: 3px; min-width: 64px; white-space: nowrap; text-align: right; padding-top: 7px; font-variant-numeric: tabular-nums; }
 .timebox-time strong { font-size: var(--text-small); font-weight: 450; color: var(--muted-foreground); }
 .timebox-time span { font-size: var(--text-caption); color: var(--muted-foreground); }
 .timebox-time small { font-size: var(--text-caption); color: var(--muted-foreground); }
@@ -305,7 +305,7 @@ a.project-tag:hover { color: var(--foreground); }
 .arrow-group { display: flex; gap: 2px; border: 1px solid var(--border); border-radius: 7px; background: var(--card); padding: 1px; }
 .week-layout { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 22px; }
 .calendar-panel { padding: 0; gap: 0; border: 1px solid var(--border); border-radius: 9px; box-shadow: none; --tw-ring-shadow: 0 0 #0000; overflow: hidden; }
-.calendar-head, .calendar-checkpoint-strip, .calendar-task-strip, .calendar-body { display: grid; grid-template-columns: 54px repeat(7, minmax(0, 1fr)); }
+.calendar-head, .calendar-checkpoint-strip, .calendar-task-strip, .calendar-body { display: grid; grid-template-columns: 72px repeat(7, minmax(0, 1fr)); }
 .calendar-timezone { align-self: center; text-align: center; font-size: var(--text-caption); color: var(--muted-foreground); letter-spacing: .4px; }
 .calendar-head { background: var(--card); border-bottom: 1px solid var(--border); }
 .calendar-day { display: flex; align-items: center; flex-direction: column; justify-content: center; min-height: 86px; position: relative; gap: 4px; border-left: 1px solid var(--border); }
@@ -322,7 +322,7 @@ a.project-tag:hover { color: var(--foreground); }
 .calendar-add-task:hover { background: var(--background); }
 .calendar-body { position: relative; background: var(--card); }
 .hour-labels { position: relative; }
-.hour-labels span { position: absolute; right: 8px; font-size: var(--text-caption); color: var(--muted-foreground); padding-top: 3px; }
+.hour-labels span { position: absolute; right: 8px; white-space: nowrap; font-size: var(--text-caption); color: var(--muted-foreground); padding-top: 3px; }
 .calendar-column { position: relative; border-left: 1px solid var(--border); }
 .today-column { background: var(--card); }
 .calendar-slot { position: absolute; display: flex; align-items: center; justify-content: center; width: 100%; height: 54px; border-bottom: 1px solid var(--border); color: transparent; }
