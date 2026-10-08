@@ -1028,3 +1028,25 @@ button.heat-cell:hover, button.heat-cell.selected { outline: 2px solid var(--rin
 .toaster .orbit-toast .orbit-toast-action:hover,
 .toaster .orbit-toast .orbit-toast-close:hover { background: var(--accent); color: var(--accent-foreground); }
 .toaster .orbit-toast button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+.prototype-watermark {
+  position: fixed;
+  right: max(32px, env(safe-area-inset-right));
+  bottom: max(24px, env(safe-area-inset-bottom));
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--text-body);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 760px) {
+  .prototype-watermark {
+    right: max(20px, env(safe-area-inset-right));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    font-size: var(--text-small);
+  }
+}

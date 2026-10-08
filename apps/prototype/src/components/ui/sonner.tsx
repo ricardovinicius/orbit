@@ -9,8 +9,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       position="bottom-right"
       closeButton
-      offset={24}
-      mobileOffset={16}
+      offset={72}
+      mobileOffset={64}
       duration={5000}
       className="toaster group"
       icons={{

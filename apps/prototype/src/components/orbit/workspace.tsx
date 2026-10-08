@@ -129,6 +129,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             </main>
           </div>
         </div>
+        <p className="prototype-watermark">Prototype preview · Work in progress</p>
         <Toaster />
         <Dialog open={!!editor} onOpenChange={(value) => { if (!value) close(); }}>
           {editor && <Editor key={`${editor.kind}-${editor.id ?? "new"}-${editor.projectId ?? ""}`} request={editor} close={close} />}
