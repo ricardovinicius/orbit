@@ -10,16 +10,17 @@
 - [x] Make sidebar shrink
 - [x] Make the session timer bar sticky
 - [x] When move the mouse over the projects buttons, when collapsed the sidebar, the name of the project must appear as tooltip
-- [ ] Improve the UI with drag-n-drop
-    - [ ] dnd on week plan calendar
-    - [ ] order today tasks
-- [ ] Implement and review the feedback_01 changes
+- [x] Improve the UI with drag-n-drop
+    - [x] dnd on week plan calendar
+    - [x] order today tasks
+- [x] Improve toast UI/UX
+- [X] Implement and review the feedback_01 changes
 - [ ] Move prototype to Figma
-- [ ] Evaluate the prototype asking for feedback 
+- [x] Evaluate the prototype asking for feedback 
 
 ## 1. Technical Scaffold
 
-- [ ] Initialize web project with Next.js
+- [x] Initialize web project with Next.js
 - [ ] Add linter, formatter and test dependencies for app
 - [ ] Define folder structure for app
 - [ ] Add containerization using Docker and Docker Compose
