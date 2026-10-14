@@ -9,3 +9,7 @@ Always prefer to use CLI tools provided by frameworks or libraries over scaffold
 Example, for Next.js:
 
 `pnpm create next-app@latest my-app --yes`
+
+## Testing Strategy
+
+Refer to @docs/TESTING.md for testing instructions.
