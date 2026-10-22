@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  web-quality:
+    name: Web quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: apps/web/package.json
+          cache: true
+          cache_dependency_path: apps/web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check linting, formatting, and imports
+        run: pnpm check
+
+      - name: Check types
+        run: pnpm typecheck
+
+      # Remove the empty-suite allowances when the first test suites land.
+      - name: Run unit and component tests
+        run: pnpm test --passWithNoTests
+
+      - name: Install Chromium
+        if: github.event_name != 'schedule'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install all browsers
+        if: github.event_name == 'schedule'
+        run: pnpm exec playwright install --with-deps
+
+      # The Playwright webServer builds and serves the production app.
+      - name: Run Chromium E2E tests
+        if: github.event_name != 'schedule'
+        run: pnpm test:e2e --pass-with-no-tests
+
+      - name: Run all browser and mobile E2E projects
+        if: github.event_name == 'schedule'
+        run: pnpm test:e2e:all --pass-with-no-tests
+
+      - name: Upload E2E failure reports and traces
+        if: failure() && !cancelled()
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-failures
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+
+      # Also validates the production build while the E2E suite is empty.
+      - name: Build web image
+        run: docker compose build web

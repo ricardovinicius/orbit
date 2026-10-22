@@ -32,4 +32,6 @@ apps/web/
 - On scheduled runs: run broader browser coverage.
 - Keep traces, screenshots, and reports for failed E2E tests.
 
+GitHub Actions runs web quality checks and the Docker production build on pull requests and pushes to `main`. Every Monday at 06:00 UTC, it runs all configured Playwright projects. Failed E2E reports and traces are kept for seven days. Empty test suites are temporarily allowed in CI until feature tests are added; linting, type checking, and the production build remain required.
+
 References: [Next.js setup](https://nextjs.org/docs/app/guides/testing/playwright), [Playwright best practices](https://playwright.dev/docs/best-practices).
