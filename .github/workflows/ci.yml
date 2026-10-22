@@ -33,6 +33,7 @@ jobs:
           persist-credentials: false
 
       - uses: actions/setup-node@v6
+        id: node
         with:
           node-version: "24"
 
@@ -42,7 +43,15 @@ jobs:
           cache: true
           cache_dependency_path: apps/web/pnpm-lock.yaml
 
+      - name: Cache installed dependencies
+        id: dependencies
+        uses: actions/cache@v5
+        with:
+          path: apps/web/node_modules
+          key: web-dependencies-v1-${{ runner.os }}-${{ runner.arch }}-node-${{ steps.node.outputs.node-version }}-${{ hashFiles('apps/web/package.json', 'apps/web/pnpm-lock.yaml', 'apps/web/pnpm-workspace.yaml', 'apps/web/.npmrc', '.npmrc') }}
+
       - name: Install dependencies
+        if: steps.dependencies.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Check linting, formatting, and imports
