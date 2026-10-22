@@ -1,6 +1,6 @@
 # Orbit Prototype
 
-Orbit's navigable UI prototype, built with Next.js, shadcn, and shared mock data. Forms and controls use temporary UI state; there is no backend, authentication, persistence, or production scheduling logic.
+Orbit's navigable UI prototype, built with Next.js, shadcn, and shared mock data. Forms and controls use temporary UI state; there is no backend, real authentication, persistence, or production scheduling logic.
 
 ## Development
 
@@ -30,6 +30,8 @@ If a restricted environment prevents Turbopack's CSS worker from binding a local
 
 | Route | Screen |
 | --- | --- |
+| `/auth` | Simulated Google sign-in, cancellation, failure, and logged-out state |
+| `/profile` | Display name, avatar upload/removal, timezone, and logout |
 | `/` | Today: Tasks, planned Timeboxes, recorded Sessions, upcoming Checkpoints |
 | `/week` | Weekly planner, Checkpoint deadlines, day assignments, Timebox forms, and Project filters |
 | `/projects` | Active/archived Projects, search, creation, and editing |
@@ -47,6 +49,8 @@ Suggested walkthrough:
 4. Register a historical Session, or complete a Task independently of time recording.
 5. Open Progress and filter by Project or period. Select a heatmap day to inspect its Sessions.
 6. Open Sessions. Filter by Project, choose a period or custom dates, and edit a recorded interval. Confirm the new total in Progress. Delete a Session after reviewing the confirmation, or cancel to keep it. Clear filters to browse older activity.
+
+Open `/auth` to preview Google sign-in, then use the account menu to edit your profile or log out. Workspace pages remain accessible while signed out. Profile changes reset on refresh; avatar images stay in the browser. Logging out during an active Session asks before discarding it.
 
 Use **Prototype controls** in the sidebar or the **Prototype** badge in the header to load populated, active-Session, first-use empty, loading, and load-failure scenarios. Switching scenarios resets temporary edits.
 

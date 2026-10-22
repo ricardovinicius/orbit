@@ -16,6 +16,8 @@ import { restoreRecords } from "@/lib/undo";
 import { ThemeToggle } from "./theme-toggle";
 import { Editor, type EditorRequest } from "./editor";
 
+import { AccountMenu } from "./account-menu";
+
 export type ActiveSession = Omit<Session, "end" | "id" | "source">;
 type Workspace = {
   data: Dataset;
@@ -101,11 +103,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     <WorkspaceContext.Provider value={{ data, setData, active, setActive, open, notify, undoFor }}>
       <TooltipProvider>
         <a className="skip-link" href="#main-content">Skip to content</a>
-        <div className="app-shell" data-sidebar-collapsed={collapsed}>
+        {pathname === "/auth" ? <main id="main-content">{children}</main> : <div className="app-shell" data-sidebar-collapsed={collapsed}>
           <aside className="sidebar" id="workspace-sidebar">
-            <div className="sidebar-brand-row"><Link href="/" className="brand" aria-label="Orbit home"><Orbit size={29} strokeWidth={1.5} /><span>orbit<span className="brand-period">.</span></span></Link><span className="mobile-theme-toggle"><ThemeToggle /></span>
+            <div className="sidebar-brand-row"><Link href="/" className="brand" aria-label="Orbit home"><Orbit size={29} strokeWidth={1.5} /><span>orbit<span className="brand-period">.</span></span></Link><span className="mobile-theme-toggle"><ThemeToggle /><AccountMenu compact /></span>
             <Button variant="secondary" size="icon-sm" className="sidebar-toggle" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} aria-controls="workspace-sidebar" onClick={() => setCollapsed((value) => !value)}>{collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}</Button></div>
-            <div className="sidebar-note"><p>Make time for<br /><strong>what matters.</strong></p></div>
             <div className="nav-label">WORKSPACE</div>
             <nav aria-label="Main navigation">
               {navigation.map(({ href, label, icon: Icon }) => <Link key={href} href={href} aria-label={label} title={label} className={`nav-item ${pathname === href || (href === "/projects" && pathname.startsWith("/projects/")) ? "selected" : ""}`} aria-current={pathname === href || (href === "/projects" && pathname.startsWith("/projects/")) ? "page" : undefined}><Icon size={18} strokeWidth={1.7} /><span>{label}</span>{label === "Today" && <span className="nav-count">{data.tasks.filter((t) => t.date === TODAY && !t.done).length}</span>}</Link>)}
@@ -118,17 +119,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             <div className="sidebar-bottom">
               <Button variant="ghost" size="sm" aria-label="Prototype controls" title="Prototype controls" className="h-auto whitespace-normal review-button" onClick={() => setReview(true)}><SlidersHorizontal size={16} /><span>Prototype controls</span><ArrowUpRight size={13} /></Button>
               <div className="sidebar-theme-toggle"><span>Appearance</span><ThemeToggle /></div>
-              <div className="profile" title="Personal workspace"><span className="profile-avatar">R</span><div>Personal workspace</div></div>
+              <AccountMenu />
             </div>
           </aside>
           <div className="app-body">
             {active && (pathname !== "/" || state === "loading" || state === "error") && <div className="active-banner" role="status"><div><span className="live-dot" /><strong>{activeProject?.name}</strong><span>Session in progress</span><span className="timer-readout">00:25:00</span><small>Demo timer</small></div><Button size="sm" onClick={() => open({ kind: "stop", projectId: active.projectId })}><Square size={12} fill="currentColor" />Stop & review</Button></div>}
             <main id="main-content" className="main-content">
-              {state === "loading" ? <div className="loading-state" role="status" aria-label="Loading workspace"><Skeleton className="heading-skeleton" /><div className="metrics-grid">{[0, 1, 2].map((i) => <Skeleton key={i} className="metric-skeleton" />)}</div><Skeleton className="content-skeleton" /><Button variant="outline" onClick={() => fixture("populated")}>Finish loading preview</Button></div> : state === "error" ? <Empty className="empty-state error-state"><EmptyHeader><EmptyMedia variant="icon"><CircleHelp /></EmptyMedia><EmptyTitle><h1>We couldn’t load your workspace</h1></EmptyTitle><EmptyDescription>Your work hasn’t changed. Try loading it again.</EmptyDescription></EmptyHeader><EmptyContent><Button onClick={() => fixture("populated")}>Try again</Button></EmptyContent></Empty> : children}
+              {pathname === "/profile" ? children : state === "loading" ? <div className="loading-state" role="status" aria-label="Loading workspace"><Skeleton className="heading-skeleton" /><div className="metrics-grid">{[0, 1, 2].map((i) => <Skeleton key={i} className="metric-skeleton" />)}</div><Skeleton className="content-skeleton" /><Button variant="outline" onClick={() => fixture("populated")}>Finish loading preview</Button></div> : state === "error" ? <Empty className="empty-state error-state"><EmptyHeader><EmptyMedia variant="icon"><CircleHelp /></EmptyMedia><EmptyTitle><h1>We couldn’t load your workspace</h1></EmptyTitle><EmptyDescription>Your work hasn’t changed. Try loading it again.</EmptyDescription></EmptyHeader><EmptyContent><Button onClick={() => fixture("populated")}>Try again</Button></EmptyContent></Empty> : children}
               <footer className="page-footer"><span><Orbit size={13} /> A little intention goes a long way.</span><span>October 2026</span></footer>
             </main>
           </div>
-        </div>
+        </div>}
         <p className="prototype-watermark">Prototype preview · Work in progress</p>
         <Toaster />
         <Dialog open={!!editor} onOpenChange={(value) => { if (!value) close(); }}>
