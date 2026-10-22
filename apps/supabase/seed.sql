@@ -1,0 +1,1 @@
+-- Add local development fixtures after the application schema is introduced.

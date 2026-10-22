@@ -5,13 +5,28 @@
 
 ## Web App
 
-The Next.js web application is in [`apps/web`](apps/web/README.md), initialized with TypeScript, Tailwind CSS, ESLint, and shadcn (Radix Nova), matching the prototype's foundation. Product screens are not implemented yet.
+The Next.js web application is in [`apps/web`](apps/web/README.md), initialized with TypeScript, Tailwind CSS, Biome, and shadcn (Radix Nova), matching the prototype's foundation. Product screens are not implemented yet.
 
 ```sh
 make web
 ```
 
 This installs dependencies and starts the web app at http://localhost:3000. For subsequent starts, use `make web-dev`.
+
+## Docker and Local Supabase
+
+With Docker running and Node.js and pnpm installed:
+
+```sh
+make supabase-start
+make docker-up
+```
+
+The web app runs at http://localhost:3000, Supabase Studio at http://localhost:54323, and the Supabase API at http://localhost:54321. The first start downloads the required images. Use `make supabase-status` to see local endpoints and keys.
+
+`make docker-up` builds and runs the production web app. Use `make web-dev` for development with hot reload. Set `WEB_PORT` to use a different web container port, for example `WEB_PORT=3001 make docker-up`.
+
+Stop the services with `make docker-down` and `make supabase-stop`; Supabase keeps local database data. The backend is initialized with an empty schema; authentication and data access are not wired into the web app yet.
 
 ## UI Prototype
 

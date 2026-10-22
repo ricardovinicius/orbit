@@ -1,11 +1,18 @@
 .DEFAULT_GOAL := help
+SUPABASE := pnpm dlx supabase@2.121.0 --workdir apps
 
 .PHONY: help prototype prototype-install prototype-dev web web-install web-dev
 .PHONY: web-lint web-lint-fix web-format web-format-check web-check web-typecheck
 .PHONY: web-test web-test-watch web-test-e2e web-test-e2e-all web-test-e2e-ui
 .PHONY: quality web-quality
+.PHONY: docker-up docker-down supabase-start supabase-stop supabase-status
 
 help:
+	@echo "make docker-up          Build and start the web container"
+	@echo "make docker-down        Stop the web container"
+	@echo "make supabase-start     Start the local Supabase stack"
+	@echo "make supabase-stop      Stop the local Supabase stack"
+	@echo "make supabase-status    Show local Supabase endpoints and keys"
 	@echo "make quality            Run all web quality checks"
 	@echo "make web                Install dependencies and start the web app"
 	@echo "make web-install        Install web app dependencies"
@@ -28,6 +35,21 @@ help:
 
 prototype: prototype-install
 	$(MAKE) prototype-dev
+
+docker-up:
+	docker compose up --build --detach --wait
+
+docker-down:
+	docker compose down
+
+supabase-start:
+	$(SUPABASE) start
+
+supabase-stop:
+	$(SUPABASE) stop
+
+supabase-status:
+	$(SUPABASE) status
 
 prototype-install:
 	pnpm --dir apps/prototype install --frozen-lockfile

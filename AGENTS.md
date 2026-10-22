@@ -32,3 +32,9 @@ Example, for Next.js:
 ## Testing Strategy
 
 Refer to @docs/TESTING.md for testing instructions.
+
+## Local Infrastructure
+
+The web Docker build uses `apps/web` as its context and runs the Next.js standalone output as a non-root user. Keep local environment files out of the build context.
+
+Supabase configuration, migrations, and seed data live in `apps/supabase`. Run the pinned Supabase CLI with `--workdir apps` (the CLI adds the `supabase` directory). The CLI owns the local backend containers; Compose owns the web container. From containers, use `http://host.docker.internal:54321` for server-side Supabase requests; browsers use `http://localhost:54321`. Never expose privileged Supabase keys through public environment variables.

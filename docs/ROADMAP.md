@@ -21,10 +21,10 @@
 ## 1. Technical Scaffold
 
 - [x] Initialize web project with Next.js
-- [ ] Add linter, formatter and test dependencies for app
-- [ ] Define folder structure for app
-- [ ] Add containerization using Docker and Docker Compose
-- [ ] Add CI/CD pipeline
+- [x] Add linter, formatter and test dependencies for app
+- [x] Define folder structure for app
+- [x] Add containerization using Docker and Docker Compose
+- [x] Add CI/CD pipeline
 
 ## 2. MVP Features
 
