@@ -29,9 +29,7 @@ apps/web/
 ## CI
 
 - On pull requests: run lint, type checking, unit tests, and a small E2E suite against a production build.
-- On scheduled runs: run broader browser and mobile coverage.
+- On scheduled runs: run broader browser coverage.
 - Keep traces, screenshots, and reports for failed E2E tests.
-
-This is the planned setup; Playwright is not installed yet.
 
 References: [Next.js setup](https://nextjs.org/docs/app/guides/testing/playwright), [Playwright best practices](https://playwright.dev/docs/best-practices).

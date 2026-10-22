@@ -26,6 +26,19 @@
 - [ ] Add containerization using Docker and Docker Compose
 - [ ] Add CI/CD pipeline
 
+## 2. MVP Features
+
+- [ ] Layout components (side bar, etc.)
+- [ ] Authentication
+- [ ] Projects
+- [ ] Checkpoints
+- [ ] Tasks
+- [ ] Today view
+- [ ] Weekly planning and Timeboxes
+- [ ] Sessions and History view
+- [ ] Progress
+- [ ] Recurring Tasks and Timeboxes
+ 
 ## Feedback 01 — Prototype implementation plan
 
 Scope: apply the five UI changes in [feedback_01](./feedbacks/feedback_01.md) to `apps/prototype`, following [DESIGN.md](./DESIGN.md). Keep interactions backed by mock data and temporary UI state. Complete this pass before moving the prototype to Figma and collecting the next round of feedback.
