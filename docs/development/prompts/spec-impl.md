@@ -9,6 +9,7 @@ Follow these guidelines:
 3. **Scope:** Keep changes focused on the specification. Avoid unrelated refactors, new requirements, or speculative abstractions.
 4. **Ambiguities:** Identify unresolved questions, conflicting requirements, and blockers. Ask for clarification before implementing affected behavior or deviating from the specification.
 5. **Validation:** Add or update meaningful tests for the specified behavior and run the relevant project checks. Report failures and any verification that could not be completed.
+6. **Independency:** Check for other issues on GitHub to avoid implement things that are planned for other issue.
 
 **Workflow:**
 - Read the complete specification, its dependencies, and the relevant project context and code.

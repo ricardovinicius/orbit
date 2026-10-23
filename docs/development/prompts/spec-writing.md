@@ -1,5 +1,7 @@
 Retrieve and analyze GitHub issue **#xxx** from `ricardovinicius/orbit`.
 
+**Important:** Change you branch to feature branch of the issue.
+
 Using `docs/specs/000_base-spec.md` as the template, draft a technical specification for the feature described in the issue.
 
 Follow these guidelines:
@@ -9,6 +11,7 @@ Follow these guidelines:
 3. **Consistency:** Align the specification with the project's existing architecture, conventions, and terminology.
 4. **Scope:** Clearly distinguish in-scope functionality from out-of-scope concerns. Avoid introduce requirements not supported by the issue.
 5. **Ambiguities:** Identify missing information, conflicting requirements, and unclear technical decisions. Ask clarifying questions rather than making unsupported assumptions.
+6. **Independency:** Check for other issues on GitHub to avoid implement things that are planned for other issue.
 
 **Workflow:**
 - Read the issue, specification template, and relevant project context.
