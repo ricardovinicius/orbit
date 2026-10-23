@@ -13,6 +13,7 @@
 
 * Avoid bloated documentation, with a lot of information
 * Use natural and clean tone
+* Do not add irrelevant documentation
 * Do not document API at markdown, prefer using FastAPI own integration with OpenAPI and Swagger for this
 * `README.md` must be simple, human-centric documentation, that must be limited to simple usage. Use AGENTS.md for explanation of technical decisions and instructions.
 * Do not manually wrap documentation lines to meet a character limit. Use line breaks for paragraphs and structure.

@@ -6,6 +6,8 @@
 - Type Checking: TypeScript Native Checker
 
 **Instructions:**
+- Use blank lines to improve readability, separating semantic code blocks
+- Always type function parameters and return values
 - Prefer unknown over any and narrow values
 - Validate external data at application boundaries.
 - Use type-only imports for types
