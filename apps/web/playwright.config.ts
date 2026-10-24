@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const port = process.env.ORBIT_TEST_PORT ?? "3100";
+const baseURL = `http://127.0.0.1:${port}`;
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -8,7 +11,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
-    baseURL: "http://127.0.0.1:3100",
+    baseURL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -20,8 +23,8 @@ export default defineConfig({
     { name: "mobile-safari", use: { ...devices["iPhone 14"] } },
   ],
   webServer: {
-    command: "pnpm build && pnpm start --hostname 127.0.0.1 --port 3100",
-    url: "http://127.0.0.1:3100",
+    command: `pnpm build && pnpm start --hostname 127.0.0.1 --port ${port}`,
+    url: baseURL,
     reuseExistingServer: false,
     timeout: 180_000,
   },
