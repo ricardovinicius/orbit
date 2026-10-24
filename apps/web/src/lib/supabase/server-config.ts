@@ -2,18 +2,29 @@ import "server-only";
 import { publicSupabaseConfig } from "./config";
 
 export function appOrigin(): string {
-  if (!process.env.APP_URL) throw new Error("APP_URL is missing.");
-  const url = new URL(process.env.APP_URL);
+  const vercelHost =
+    process.env.VERCEL_ENV === "production"
+      ? (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL)
+      : process.env.VERCEL_URL;
+  if (process.env.VERCEL_ENV === "production" && !vercelHost) {
+    throw new Error("Vercel production URL is missing.");
+  }
+  const value = vercelHost
+    ? `https://${vercelHost}`
+    : process.env.APP_URL || "http://localhost:3000";
+  const url = new URL(value);
   if (
     !["http:", "https:"].includes(url.protocol) ||
     url.username ||
     url.password ||
     url.pathname !== "/" ||
     url.search ||
-    url.hash
-  ) {
-    throw new Error("APP_URL must be an application origin.");
-  }
+    url.hash ||
+    (vercelHost && (url.host !== vercelHost.toLowerCase() || url.port))
+  )
+    throw new Error(
+      "Application URL must be an origin; Vercel URLs must be hostnames.",
+    );
   return url.origin;
 }
 

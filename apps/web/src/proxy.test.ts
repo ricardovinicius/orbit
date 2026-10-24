@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { NextRequest } from "next/server";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { proxy } from "./proxy";
 
 const mocks = vi.hoisted(() => ({ user: vi.fn(), refresh: false }));
@@ -41,7 +41,10 @@ vi.mock("@supabase/ssr", () => ({
     return {};
   },
 }));
+afterEach(() => vi.unstubAllEnvs());
 beforeEach(() => {
+  vi.stubEnv("VERCEL_URL", undefined);
+  vi.stubEnv("VERCEL_ENV", undefined);
   mocks.user.mockResolvedValue({ id: "owner" });
   mocks.refresh = false;
 });
@@ -89,4 +92,29 @@ it("leaves the callback exchange to its handler", async () => {
     new NextRequest("https://orbit.example/auth/callback?code=valid"),
   );
   expect(mocks.user).not.toHaveBeenCalled();
+});
+
+it.each(["orbit-git-feature-team.vercel.app", "attacker.example"])(
+  "canonicalizes %s before creating authentication cookies",
+  async (host) => {
+    vi.stubEnv("VERCEL_URL", "orbit.example");
+    const response = await proxy(
+      new NextRequest(`https://${host}/auth?next=%2Fweek`),
+    );
+    expect(response.headers.get("location")).toBe(
+      "https://orbit.example/auth?next=%2Fweek",
+    );
+    expect(response.status).toBe(307);
+    expect(response.cookies.getAll()).toEqual([]);
+    expect(mocks.user).not.toHaveBeenCalled();
+  },
+);
+it("never lets a protocol-relative path replace the canonical redirect host", async () => {
+  vi.stubEnv("VERCEL_URL", "orbit.example");
+  const response = await proxy(
+    new NextRequest("https://attacker.example//evil.example/auth"),
+  );
+  expect(new URL(response.headers.get("location") ?? "").origin).toBe(
+    "https://orbit.example",
+  );
 });

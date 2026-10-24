@@ -9,7 +9,7 @@
 | **Status** | In Progress |
 | **Author** | Codex |
 | **Created** | 2026-10-23 |
-| **Updated** | 2026-10-23 |
+| **Updated** | 2026-10-24 |
 | **Depends on** | Existing Next.js and local Supabase scaffold; no prerequisite feature spec |
 | **Supersedes** | None |
 | **Issue** | [#2 — Implement authentication with Google SSO](https://github.com/ricardovinicius/orbit/issues/2) |
@@ -119,11 +119,11 @@ Compose shadcn primitives where appropriate, following the existing Radix Nova p
 
 ### Configuration
 
-- Define browser-visible `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; local installations may use the compatible local anon key value. Define server-only `SUPABASE_INTERNAL_URL` for container connectivity and `APP_URL` as the trusted public application origin.
+- Define browser-visible `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; local installations may use the compatible local anon key value. Define server-only `SUPABASE_INTERNAL_URL` for container connectivity. Resolve the application origin exclusively from environment variables: Vercel production uses `https://VERCEL_PROJECT_PRODUCTION_URL`, falling back to `https://VERCEL_URL`; previews use `https://VERCEL_URL`; outside Vercel, use `APP_URL` or `http://localhost:3000`. Reject malformed origins and missing Vercel production URLs. Canonicalize Vercel aliases before authentication so PKCE cookies and callbacks share a host. Request headers never determine the selected origin.
 - Browser requests use `http://localhost:54321` locally. Container-side Supabase requests use `http://host.docker.internal:54321`; provider authorization URLs and browser redirects must always use browser-reachable URLs. Use one consistent browser hostname for the application and its callback cookies.
 - Enable Google in `apps/supabase/config.toml`, loading the client ID and secret from `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`. Keep actual values in ignored local environment files. Configure the hosted provider through the deployment's Supabase settings.
 - Register the local Supabase provider callback `http://localhost:54321/auth/v1/callback` and the deployed Supabase callback in Google. Allow the application callback `http://localhost:3000/auth/callback` locally and the exact deployed HTTPS application callback in Supabase. Google redirects to Supabase; Supabase redirects to Orbit. Follow the [Google provider configuration](https://supabase.com/docs/guides/auth/social-sign-in/auth-google).
-- Deployment documentation uses placeholders for the actual application origin and Supabase project URL. Include Google consent-screen/test-user setup where applicable. Do not invent a deployment domain or authorize arbitrary redirect origins.
+- Vercel preview callbacks require exact deployment entries or a project/team-scoped pattern in Supabase's redirect allowlist; keep the production callback exact. Deployment documentation uses placeholders for the actual application origin and Supabase project URL. Include Google consent-screen/test-user setup where applicable. Do not invent a deployment domain or authorize arbitrary redirect origins.
 - Provide credential-free environment examples and brief setup steps in `apps/web/README.md`. Keep local environments outside the Docker build context, pass required public configuration at build time, and provide server configuration at runtime. Provider secrets belong to Supabase, not the browser or web build. No service-role key is required for normal web requests.
 
 ---
@@ -184,6 +184,12 @@ Follow `docs/TESTING.md`: unit tests for rules, real-backend integration tests f
 - Passed: the user confirmed real Google sign-in, workspace reload, and sign-out on the configured local instance at `http://localhost:3115`.
 - Pending: verification against a deployment target, including its Google/Supabase redirect configuration. This required manual check keeps the specification In Progress.
 
+### Vercel Follow-up Validation — 2026-10-24
+
+- Passed: Biome, TypeScript, 70 unit/component tests, and a production build with Vercel preview variables and no APP_URL.
+- Passed: four production-server smoke checks for public sign-in, alias canonicalization before PKCE cookies, canonical callback redirects, and rejection of spoofed hosts.
+- The deployed preview still requires the matching Supabase redirect allowlist and real Google consent verification.
+
 ### Manual Verification
 
 1. Configure Google and Supabase locally from the documented steps; verify both native development and Docker operation without exposing credentials.
@@ -199,6 +205,7 @@ Follow `docs/TESTING.md`: unit tests for rules, real-backend integration tests f
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-10-24 | Resolve Vercel origins exclusively from environment variables and canonicalize aliases | User requested simpler environment-only origin selection; canonicalization keeps PKCE cookies and callbacks on the same host |
 | 2026-10-23 | Upgrade Next.js from 16.4.0 to 16.4.1 | User approved the security patch after the dependency audit |
 | 2026-10-23 | Include a private profile with name, avatar, and email | Explicit user clarification; provides the resource for data-isolation acceptance tests |
 | 2026-10-23 | Provision and synchronize a read-only profile from Auth data | Basic profile storage is in scope; editing and uploads were not requested |

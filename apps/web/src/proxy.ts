@@ -8,6 +8,19 @@ import { appOrigin, supabaseFetch } from "@/lib/supabase/server-config";
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const origin = appOrigin();
+  // Choose the origin from environment only. Redirect aliases before creating PKCE cookies.
+  const isVercel =
+    !!process.env.VERCEL_URL || process.env.VERCEL_ENV === "production";
+  const requestHost = request.headers.get("host") ?? request.nextUrl.host;
+  if (isVercel && requestHost.toLowerCase() !== new URL(origin).host) {
+    const canonical = new URL(origin);
+    canonical.pathname = request.nextUrl.pathname;
+    canonical.search = request.nextUrl.search;
+    const response = NextResponse.redirect(canonical, 307);
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("Referrer-Policy", "no-referrer");
+    return response;
+  }
   const path = request.nextUrl.pathname;
   const next = safeDestination(`${path}${request.nextUrl.search}`, origin);
   const headers = new Headers(request.headers);
