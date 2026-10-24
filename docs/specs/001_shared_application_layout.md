@@ -9,7 +9,7 @@
 | **Status** | Done |
 | **Author** | Codex |
 | **Created** | 2026-10-23 |
-| **Updated** | 2026-10-23 |
+| **Updated** | 2026-10-24 |
 | **Depends on** | None; implement independently of issue #2 |
 | **Supersedes** | None |
 | **Issue** | [#1 — Build shared application layout components](https://github.com/ricardovinicius/orbit/issues/1) |
@@ -50,7 +50,7 @@ The main application still displays the Next.js starter page. Orbit users need c
 
 ### Overview
 
-Use Next.js App Router and compose the shell in `apps/web/src/app/(workspace)/layout.tsx`. Keep document markup and global styles in the root layout. Authentication pages belong outside `(workspace)`, under `(auth)`; a route group is a layout boundary, not an authorization mechanism.
+Use Next.js App Router and compose the shell in `apps/web/src/app/(app)/(workspace)/layout.tsx`. Keep document markup and global styles in the root layout. Authentication pages belong outside `(workspace)`, under `auth/`; a route group is a layout boundary, not an authorization mechanism.
 
 Use the prototype's `workspace.tsx`, `shared.tsx`, and global styles as visual references for branding, navigation hierarchy, typography, and spacing. Follow `docs/DESIGN.md` and the existing shadcn configuration. Compose shadcn Sidebar, Button, Tooltip, and mobile Sheet primitives where applicable. Keep interactive navigation in client components; page containers and route content need no client boundary solely to participate in the layout.
 
@@ -96,7 +96,7 @@ All paths below are relative to `apps/web/src`.
 
 | Component or module | Path | Responsibility |
 |---------------------|------|----------------|
-| Workspace layout | `app/(workspace)/layout.tsx` | Mount the shell once around application routes and supply navigation entries |
+| Workspace layout | `app/(app)/(workspace)/layout.tsx` | Mount the shell once around application routes and supply navigation entries |
 | AppShell | `components/layout/app-shell.tsx` | Compose sidebar, mobile trigger, skip link, and main landmark around children |
 | AppSidebar | `components/layout/app-sidebar.tsx` | Render branding and both navigation sections using shared desktop/mobile navigation content |
 | PageHeader | `components/layout/page-header.tsx` | Render required title, optional description, and optional action slot |
@@ -132,10 +132,10 @@ None. No backend dependency is required to implement or validate this shell.
 
 1. Read `docs/DESIGN.md`, `docs/CODE_STYLE.md`, `docs/TESTING.md`, and the installed Next.js guides required by `apps/web/AGENTS.md`. Inspect the existing shadcn configuration and add needed primitives with its CLI, preserving the configured style and aliases.
 2. Create the layout components and navigation configuration under `apps/web/src/components/layout/`. Keep matching logic independently testable and UI state close to the controls that own it.
-3. Add `apps/web/src/app/(workspace)/layout.tsx` and move the root page into `(workspace)/page.tsx`, replacing starter content with a Today placeholder. Remove the old root page to avoid duplicate `/` routes.
+3. Add `apps/web/src/app/(app)/(workspace)/layout.tsx` and move the root page into `(workspace)/page.tsx`, replacing starter content with a Today placeholder. Remove the old root page to avoid duplicate `/` routes.
 4. Add placeholder route pages for `week`, `projects`, `projects/[projectId]`, `sessions`, and `progress` within `(workspace)`. Use the shared header and container on each page.
 5. Adapt visual tokens and layout styles in `apps/web/src/app/globals.css` only as necessary to match the prototype and support responsive overflow. Keep document markup in the root layout; do not mount the shell there.
-6. Keep the `(auth)` boundary available for issue #2. Do not add a sign-in flow or simulated authentication to demonstrate separation; verify shell exclusion with tests and any authentication routes present when implementation occurs.
+6. Keep the `auth/` boundary outside the protected workspace. Do not add a sign-in flow or simulated authentication to demonstrate separation; verify shell exclusion with tests and any authentication routes present when implementation occurs.
 7. Add the navigation tests below and run the required application checks. This specification authorizes no feature implementation during its drafting.
 
 ### Migrations
@@ -166,7 +166,7 @@ Use a small Playwright suite in `apps/web/e2e/layout.spec.ts` against the config
 - Given mobile navigation, open it by keyboard, select a destination, and verify it closes; also verify Escape dismissal and focus restoration.
 - Given desktop navigation, collapse and expand it and continue navigating with the keyboard.
 
-Use accessible roles and labels, independent tests, and visible outcomes. Do not add a fake backend or prototype tests to this application suite. This issue needs no test database; when authentication is integrated, reuse the established authenticated-session setup according to `docs/TESTING.md`.
+Use accessible roles and labels, independent tests, and visible outcomes. Do not add a fake backend or prototype tests to this application suite. With authentication integrated from main, use the dedicated Supabase test database and isolated authenticated sessions according to `docs/TESTING.md`.
 
 Run the existing `apps/web` lint, format check, typecheck, Vitest, and Chromium Playwright commands. The existing Playwright configuration builds the production application. Retain the repository's broader scheduled browser coverage.
 
@@ -191,6 +191,10 @@ Run the existing `apps/web` lint, format check, typecheck, Vitest, and Chromium 
 - The installed Next.js version reports a security advisory during production builds. The build passed after its upgrade reminder; dependency remediation is outside this layout change.
 
 ---
+
+## Integration with main — 2026-10-24
+
+Authentication from issue #2 is now available on `main`. The `(app)` parent layout owns session validation and lifecycle handling; `(workspace)` composes the shell beneath it. The Today placeholder retains the authenticated profile and sign-out controls. Layout and theme E2E tests use isolated real Supabase sessions; sign-in pages stay outside the shell. Merged validation passed Biome checks, type checking, 83 unit/component tests, the production build, and all 10 Chromium tests.
 
 ## Decision Log
 

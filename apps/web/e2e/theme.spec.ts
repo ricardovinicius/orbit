@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/workspace";
 
 test("uses system appearance until a choice is saved, then preserves it across reloads", async ({
   page,

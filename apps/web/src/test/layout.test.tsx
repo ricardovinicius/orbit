@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import WorkspaceLayout from "@/app/(workspace)/layout";
+import WorkspaceLayout from "@/app/(app)/(workspace)/layout";
 import RootLayout from "@/app/layout";
 import { AppShell } from "@/components/layout/app-shell";
 import { navigationCurrent } from "@/components/layout/navigation";

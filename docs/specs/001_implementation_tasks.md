@@ -25,3 +25,12 @@ Prototype-fidelity follow-up passed Biome checks, type checking, 13 component te
 - [x] Validate theme switching, reload persistence, mobile controls, and storage failure.
 
 Dark mode validation passed Biome checks, type checking, 13 component tests, the production build, and all six Chromium tests.
+
+## Main integration — 2026-10-24
+
+- [x] Preserve the root Suspense boundary and pre-paint theme initialization.
+- [x] Compose workspace routes under the existing authenticated `(app)` layout and retain profile/sign-out behavior.
+- [x] Reuse real Supabase sessions for workspace browser tests and assert sign-in stays outside the shell.
+- [x] Validate merged quality and browser tests before pushing.
+
+Main integration passed Biome checks, type checking, 83 unit/component tests, the production build, and all 10 Chromium tests against the isolated Supabase stack. PR screenshots were refreshed using an isolated test account.

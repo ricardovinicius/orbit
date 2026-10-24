@@ -1,5 +1,5 @@
 import { Orbit } from "lucide-react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import {
   Empty,
   EmptyDescription,
@@ -13,9 +13,11 @@ import { PageHeader } from "./page-header";
 export function PlaceholderPage({
   title,
   description,
+  children,
 }: {
   title: string;
   description: string;
+  children?: ReactNode;
 }): ReactElement {
   return (
     <PageContainer>
@@ -31,6 +33,7 @@ export function PlaceholderPage({
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
+      {children && <div className="mt-6">{children}</div>}
     </PageContainer>
   );
 }

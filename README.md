@@ -5,7 +5,7 @@
 
 ## Web App
 
-The Next.js web application is in [`apps/web`](apps/web/README.md), initialized with TypeScript, Tailwind CSS, Biome, and shadcn (Radix Nova), matching the prototype's foundation. Product screens are not implemented yet.
+The Next.js web application is in [`apps/web`](apps/web/README.md), initialized with TypeScript, Tailwind CSS, Biome, and shadcn (Radix Nova), matching the prototype's foundation. Google sign-in and a private workspace placeholder are available; configure authentication using the web app README.
 
 ```sh
 make web
@@ -26,7 +26,7 @@ The web app runs at http://localhost:3000, Supabase Studio at http://localhost:5
 
 `make docker-up` builds and runs the production web app. Use `make web-dev` for development with hot reload. Set `WEB_PORT` to use a different web container port, for example `WEB_PORT=3001 make docker-up`.
 
-Stop the services with `make docker-down` and `make supabase-stop`; Supabase keeps local database data. The backend is initialized with an empty schema; authentication and data access are not wired into the web app yet.
+Stop the services with `make docker-down` and `make supabase-stop`; Supabase keeps local database data. Configure Google sign-in and apply the profile migration using the [web app setup instructions](apps/web/README.md#google-sign-in-setup).
 
 ## UI Prototype
 

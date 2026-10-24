@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/workspace";
 
 test("desktop navigation preserves collapse state and supports history", async ({
   page,
