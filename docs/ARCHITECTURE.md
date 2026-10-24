@@ -63,7 +63,10 @@ Supabase is the BaaS of this project.
 @ apps/web
 
 src/
-    routes/     Tanstack router
+    app/        Next.js App Router routes and layouts
+        (app)/          Validated session and session lifecycle boundary
+            (workspace)/    Application pages sharing the application shell
+        auth/           Sign-in and callback outside the application shell
     features/
         {feature}/
             components/     Specific Components of this feature
@@ -80,6 +83,8 @@ src/
     test/   Vitest Unit Tests
 e2e/        Playwright E2E Tests
     {feature}.spec.ts
+
+The root `src/app/layout.tsx` owns the document and global styles. The `(app)` layout validates the session and mounts the session boundary. Its `(workspace)` child layout composes shared components from `src/components/layout`; `auth/` remains outside that shell. Route groups do not change public URLs. Keep route files thin and feature behavior in `src/features`; use client components for interactive navigation controls while preserving server components where possible.
 
 
 ## Supabase Codebase Structure

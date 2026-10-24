@@ -1,35 +1,5 @@
-import { type BrowserContext, expect, test } from "@playwright/test";
-import { createServerClient } from "@supabase/ssr";
-import { createAccount } from "./helpers/accounts";
-
-async function authenticate(
-  context: BrowserContext,
-  account: Awaited<ReturnType<typeof createAccount>>,
-): Promise<void> {
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
-    {
-      cookieOptions: { name: "orbit-auth" },
-      cookies: {
-        getAll: () => [],
-        setAll: async (values) => {
-          await context.addCookies(
-            values.map(({ name, value }) => ({
-              name,
-              value,
-              domain: "127.0.0.1",
-              path: "/",
-              sameSite: "Lax" as const,
-            })),
-          );
-        },
-      },
-    },
-  );
-  const { error } = await supabase.auth.setSession(account.session);
-  if (error) throw new Error("Could not establish browser test session.");
-}
+import { expect, test } from "@playwright/test";
+import { authenticate, createAccount } from "./helpers/accounts";
 
 test("anonymous requests retain their destination and callbacks expose recoverable errors", async ({
   page,
@@ -39,6 +9,17 @@ test("anonymous requests retain their destination and callbacks expose recoverab
     page.getByRole("button", { name: "Continue with Google" }),
   ).toBeVisible();
   expect(new URL(page.url()).searchParams.get("next")).toBe("/?view=focus");
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }),
+  ).toHaveCount(0);
+  await page.goto("/week?view=focus");
+  await expect(
+    page.getByRole("button", { name: "Continue with Google" }),
+  ).toBeVisible();
+  expect(new URL(page.url()).searchParams.get("next")).toBe("/week?view=focus");
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }),
+  ).toHaveCount(0);
   await page.goto(
     "/auth/callback?error=access_denied&error_description=do-not-display&next=https://evil.example",
   );
@@ -62,7 +43,7 @@ test("a real session survives reloads, skips sign-in, and loses access after sig
     await authenticate(context, account);
     await page.goto("/auth?next=%2F%3Fview%3Dfocus");
     await expect(
-      page.getByRole("heading", { name: "Your workspace" }),
+      page.getByRole("heading", { name: "Today", exact: true }),
     ).toBeVisible();
     expect(new URL(page.url()).search).toBe("?view=focus");
     await expect(page.getByText(account.email)).toBeVisible();
@@ -96,7 +77,7 @@ test("an externally revoked session cannot reopen protected content", async ({
     await authenticate(context, account);
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: "Your workspace" }),
+      page.getByRole("heading", { name: "Today", exact: true }),
     ).toBeVisible();
     await account.client.auth.signOut({ scope: "global" });
     await page.reload();
@@ -128,7 +109,7 @@ test("expired cookies refresh when possible and return to sign-in when renewal f
     ]);
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: "Your workspace" }),
+      page.getByRole("heading", { name: "Today", exact: true }),
     ).toBeVisible();
     expect(
       (await context.cookies()).find((cookie) => cookie.name === "orbit-auth")

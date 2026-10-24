@@ -1,3 +1,4 @@
+import { PlaceholderPage } from "@/components/layout/placeholder-page";
 import {
   Card,
   CardContent,
@@ -13,11 +14,14 @@ import { ProfileIdentity } from "@/features/profile/components/profile-identity"
 export default async function Home(): Promise<React.JSX.Element> {
   const profile = await ownProfile();
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col justify-center px-6 py-12">
+    <PlaceholderPage
+      title="Today"
+      description="A little clarity for the day ahead."
+    >
       <Card>
         <CardHeader>
           <CardTitle>
-            <h1>Your workspace</h1>
+            <h2>Your account</h2>
           </CardTitle>
           <CardDescription>You’re signed in to Orbit.</CardDescription>
         </CardHeader>
@@ -28,6 +32,6 @@ export default async function Home(): Promise<React.JSX.Element> {
           <SignOutButton />
         </CardFooter>
       </Card>
-    </main>
+    </PlaceholderPage>
   );
 }

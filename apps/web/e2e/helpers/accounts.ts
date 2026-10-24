@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import type { BrowserContext } from "@playwright/test";
+import { createServerClient } from "@supabase/ssr";
 import {
   createClient,
   type Session,
@@ -73,4 +75,33 @@ export async function createAccount(): Promise<{
       if (result.error) throw new Error("Test account cleanup failed.");
     },
   };
+}
+
+export async function authenticate(
+  context: BrowserContext,
+  account: Awaited<ReturnType<typeof createAccount>>,
+): Promise<void> {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
+    {
+      cookieOptions: { name: "orbit-auth" },
+      cookies: {
+        getAll: () => [],
+        setAll: async (values) => {
+          await context.addCookies(
+            values.map(({ name, value }) => ({
+              name,
+              value,
+              domain: "127.0.0.1",
+              path: "/",
+              sameSite: "Lax" as const,
+            })),
+          );
+        },
+      },
+    },
+  );
+  const { error } = await supabase.auth.setSession(account.session);
+  if (error) throw new Error("Could not establish browser test session.");
 }
